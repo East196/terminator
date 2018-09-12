@@ -12,15 +12,12 @@ class Bots {
 	def static void main(
 		String[] args) {
 		printClassDefine("TypeInMore/type	defaultType	mongoType	esType")
-		smartCopy('''E:\workspace\dsl\any2any\src\main\java\com\github\east196\xcode\common''',
-			'''E:\workspace\dsl\any2any\src\main\java\com\github\east196\xcode\core'''
-		)
 	}
 
 	def static Function<String, String> noop() {
 		[in|in]
 	}
-
+	
 	def static smartCopy(String fromDir, String toDir) {
 		val fixedToDir = if (toDir.endsWith("\\")) {
 				toDir

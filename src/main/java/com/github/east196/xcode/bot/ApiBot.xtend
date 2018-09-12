@@ -12,9 +12,10 @@ class UniformInterfaceGene {
 //		val basePath='''/src/main/xtend/io/device/uniform/'''
 //		var src= '''/src/main/resources/设备与设备管理平台交互接口20151215.doc'''
 
+		val projectPath ='''E:\workspace\github\east196\java\xcode'''
 		val basePackageName = "io.device.uniform"
-		val basePath='''/src/main/xtend/io/device/uniform'''
-		var src= '''/src/main/resources/POI接口文档160725.doc'''
+		val basePath=projectPath+'''/src/main/java/io/device/uniform'''
+		var src= '''E:\backup\xcode\POI接口文档160725.doc'''
 		val tables = Bots.tables(src)
 		println("--表格总数："+tables.size())
 		
@@ -33,43 +34,45 @@ class UniformInterfaceGene {
 			var content = reqQuery(basePackageName+".req", httpReqResp)
 			var klassType = httpReqResp.reqQueryKlassType
 			var path = '''«basePath»/req/«klassType».java'''
+			println(path)
+			println(content)
 			Bots.copy(content,path)
 		]
-//
-//		
-//		httpReqResps.filter[it.reqBodyItems.size>0].forEach[httpReqResp|
-//			var content = reqBody(basePackageName+".req", httpReqResp)
-//			var klassType = httpReqResp.reqBodyKlassType
-//			var path = '''«basePath»/req/«klassType».java'''
-//			GeneUtils.copy(content,path)
-//		]
-//		
-//		httpReqResps.forEach[httpReqResp|
-//			var klassType = httpReqResp.respKlassType
-//			var content = resp(basePackageName+".resp", httpReqResp)
-//			var path = '''«basePath»/resp/«klassType».java'''
-//			GeneUtils.copy(content,path)
-//		]
-//		
-//		httpReqResps.forEach[httpReqResp|
-//			val indexs=httpReqResp.respItems.filter[it.unnormal].map[httpReqResp.respItems.indexOf(it)]
-//			indexs.forEach[index|
-//				var klassType = httpReqResp.respItems.get(index).type
-//				var content = respSub(basePackageName+".resp", httpReqResp,index)
-//				var path = '''«basePath»/resp/«klassType».java'''
-//				GeneUtils.copy(content,path)
-//			]
-//		]
-//		
-//		var klassType="UniformDeviceHttp"
-//		var content = http(basePackageName,klassType, httpReqResps)
-//		var path = '''«basePath»/«klassType».java'''
-//		GeneUtils.copy(content,path)
-//
-//		klassType="UniformDeviceController"
-//		content = controller(basePackageName,klassType, httpReqResps)
-//		path = '''«basePath»/«klassType».java'''
-//		GeneUtils.copy(content,path)		
+
+		
+		httpReqResps.filter[it.reqBodyItems.size>0].forEach[httpReqResp|
+			var content = reqBody(basePackageName+".req", httpReqResp)
+			var klassType = httpReqResp.reqBodyKlassType
+			var path = '''«basePath»/req/«klassType».java'''
+			Bots.copy(content,path)
+		]
+		
+		httpReqResps.forEach[httpReqResp|
+			var klassType = httpReqResp.respKlassType
+			var content = resp(basePackageName+".resp", httpReqResp)
+			var path = '''«basePath»/resp/«klassType».java'''
+			Bots.copy(content,path)
+		]
+		
+		httpReqResps.forEach[httpReqResp|
+			val indexs=httpReqResp.respItems.filter[it.unnormal].map[httpReqResp.respItems.indexOf(it)]
+			indexs.forEach[index|
+				var klassType = httpReqResp.respItems.get(index).type
+				var content = respSub(basePackageName+".resp", httpReqResp,index)
+				var path = '''«basePath»/resp/«klassType».java'''
+				Bots.copy(content,path)
+			]
+		]
+		
+		var klassType="UniformDeviceHttp"
+		var content = http(basePackageName,klassType, httpReqResps)
+		var path = '''«basePath»/«klassType».java'''
+		Bots.copy(content,path)
+
+		klassType="UniformDeviceController"
+		content = controller(basePackageName,klassType, httpReqResps)
+		path = '''«basePath»/«klassType».java'''
+		Bots.copy(content,path)		
 		
 	}
 	
@@ -115,6 +118,8 @@ class UniformInterfaceGene {
 		var List<ReqItem> reqBodyItems=newArrayList()
 		for (var j = 1; j < reqBodyTable.numRows; j++) {
 			var row=reqBodyTable.getRow(j)
+			
+			println(row.getCell(1).text.trim)
 			if(!row.getCell(1).text.trim.nullOrEmpty){
 				var String name=row.getCell(0).text.trim
 				var String require=row.getCell(1).text.trim
@@ -124,6 +129,7 @@ class UniformInterfaceGene {
 				reqBodyItems.add(reqItem)
 			}
 		}
+		println(reqBodyItems.length)
 		reqBodyItems
 	}
 	
@@ -192,7 +198,7 @@ class UniformInterfaceGene {
 		import org.springframework.web.bind.annotation.RequestMethod;
 		import org.springframework.web.bind.annotation.RestController;
 
-		«FOR http : httpReqResps»
+		«FOR http : httpReqResps.filter[it.reqBodyItems.size>0]»
 		import «basePackageName».req.«http.reqBodyKlassType»;
 		«ENDFOR»
 		import «basePackageName».resp.DefaultResp;		
@@ -207,7 +213,7 @@ class UniformInterfaceGene {
 			«FOR http : httpReqResps»
 			/** «http.req.comment» */
 			@RequestMapping(value = "«http.req.url»", method = RequestMethod.«http.req.method»)
-			«http.respKlassType» «http.req.name»(@RequestBody «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower») {
+			«http.respKlassType» «http.req.name»(«IF http.reqBodyItems.size>0»@RequestBody «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower»«ENDIF») {
 				return new «http.respKlassType»();
 			}
 			
@@ -227,7 +233,7 @@ class UniformInterfaceGene {
 		import java.util.HashMap;
 		import java.util.Map;
 		
-		import io.vertx.core.http.HttpServerRequest;
+«««		import io.vertx.core.http.HttpServerRequest;
 		import org.apache.commons.lang3.builder.HashCodeBuilder;
 		import org.apache.commons.lang3.builder.EqualsBuilder;
 		import org.apache.commons.lang3.builder.ToStringBuilder;
@@ -254,24 +260,24 @@ class UniformInterfaceGene {
 		        return queryMap;
 			}
 			
-			public static «klassType» from(HttpServerRequest httpServerRequest){
-				«klassType» «klassType.toFirstLower»=new «klassType»();
-				«FOR f : fields»
-				«IF f.type.toLowerCase.startsWith("boolean")»
-				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Boolean.parseBoolean(httpServerRequest.getParam("«f.javaName»")));
-				«ENDIF»
-				«IF f.type.toLowerCase.startsWith("double")»
-				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Double.parseDouble(httpServerRequest.getParam("«f.javaName»")));
-				«ENDIF»
-				«IF f.type.toLowerCase.startsWith("int")»
-				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Integer.parseInt(httpServerRequest.getParam("«f.javaName»")));
-				«ENDIF»
-				«IF f.type.toLowerCase.startsWith("string")»
-				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(httpServerRequest.getParam("«f.javaName»"));
-				«ENDIF»
-				«ENDFOR»
-				return «klassType.toFirstLower»;
-			}
+«««			public static «klassType» from(HttpServerRequest httpServerRequest){
+«««				«klassType» «klassType.toFirstLower»=new «klassType»();
+«««				«FOR f : fields»
+«««				«IF f.type.toLowerCase.startsWith("boolean")»
+«««				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Boolean.parseBoolean(httpServerRequest.getParam("«f.javaName»")));
+«««				«ENDIF»
+«««				«IF f.type.toLowerCase.startsWith("double")»
+«««				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Double.parseDouble(httpServerRequest.getParam("«f.javaName»")));
+«««				«ENDIF»
+«««				«IF f.type.toLowerCase.startsWith("int")»
+«««				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(Integer.parseInt(httpServerRequest.getParam("«f.javaName»")));
+«««				«ENDIF»
+«««				«IF f.type.toLowerCase.startsWith("string")»
+«««				«klassType.toFirstLower».set«f.javaName.toFirstUpper»(httpServerRequest.getParam("«f.javaName»"));
+«««				«ENDIF»
+«««				«ENDFOR»
+«««				return «klassType.toFirstLower»;
+«««			}
 			
 			public «klassType»(){}
 			
@@ -389,7 +395,7 @@ class UniformInterfaceGene {
 		public class «klassType» {
 			
 			«FOR f : fields»
-			/** «f.comment» */
+			/** «f.label» */
 			«IF f.name!=f.javaName»
 			@SerializedName("«f.name»")
 			«ENDIF»
@@ -441,7 +447,7 @@ class UniformInterfaceGene {
 			if(item.name.startsWith("|")&&break==false){
 				var String name=item.name.replace("|","")
 				var String type=item.type
-				var String comment=item.comment
+				var String comment=item.label
 				var respItem=new RespItem(name,type,comment)
 				fields.add(respItem)
 			}else{
@@ -463,7 +469,7 @@ class UniformInterfaceGene {
 		public class «klassType» {
 			
 			«FOR f : fields»
-			/** «f.comment» */
+			/** «f.label» */
 			«IF f.name!=f.javaName»
 			@SerializedName("«f.name»")
 			«ENDIF»
@@ -568,7 +574,7 @@ class UniformInterfaceGene {
 	static class RespItem {
 		String name
 		String type
-		String comment
+		String label
 		def javaName(){
 			javaNameFrom(name)
 		}
