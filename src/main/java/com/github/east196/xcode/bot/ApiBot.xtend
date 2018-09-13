@@ -162,9 +162,14 @@ class UniformInterfaceGene {
 		'''
 		package «basePackageName»;
 		
-		import retrofit.http.Body;
+		
 		«IF httpReqResps.exists[it.req.method=="GET"]»import retrofit.http.GET;«ENDIF»
 		«IF httpReqResps.exists[it.req.method=="POST"]»import retrofit.http.POST;«ENDIF»
+		import retrofit.http.Query;
+		import retrofit.http.QueryMap;
+		import retrofit.http.Body;
+		
+		import java.util.Map;
 
 		«FOR http : httpReqResps»
 		«IF http.reqBodyItems.size>0»import «basePackageName».req.«http.reqBodyKlassType»;«ENDIF»
@@ -180,9 +185,14 @@ class UniformInterfaceGene {
 			/** «http.req.comment» */
 			«http.methodAnnotation»("«http.req.url»")
 			«http.respKlassType» «http.req.name»(
-			«FOR f : http.reqPrams SEPARATOR ","»		«f.type» «f.javaName»
+			«FOR f : http.reqPrams SEPARATOR ","»@Query("«f.javaName»")		«f.type» «f.javaName»
 			«ENDFOR»«IF http.reqBodyItems.size>0»@Body «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower»«ENDIF»);
-			
+
+			/** «http.req.comment» */
+			«http.methodAnnotation»("«http.req.url»")
+			«http.respKlassType» «http.req.name»ByMap(
+			«IF http.reqPrams.size>0»@QueryMap Map<String,Object> queryMap
+			«ENDIF»«IF http.reqBodyItems.size>0»@Body «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower»«ENDIF»);			
 			«ENDFOR»
 			
 		}
@@ -198,10 +208,13 @@ class UniformInterfaceGene {
 		import org.springframework.web.bind.annotation.RequestMethod;
 		import org.springframework.web.bind.annotation.RestController;
 
+		«FOR http : httpReqResps.filter[it.reqPrams.size>0]»
+		import «basePackageName».req.«http.reqQueryKlassType»;
+		«ENDFOR»
 		«FOR http : httpReqResps.filter[it.reqBodyItems.size>0]»
 		import «basePackageName».req.«http.reqBodyKlassType»;
 		«ENDFOR»
-		import «basePackageName».resp.DefaultResp;		
+«««		import «basePackageName».resp.DefaultResp;		
 		«FOR http : httpReqResps.filter[it.respItems.size>2]»
 		import «basePackageName».resp.«http.respKlassType»;
 		«ENDFOR»
@@ -213,7 +226,13 @@ class UniformInterfaceGene {
 			«FOR http : httpReqResps»
 			/** «http.req.comment» */
 			@RequestMapping(value = "«http.req.url»", method = RequestMethod.«http.req.method»)
-			«http.respKlassType» «http.req.name»(«IF http.reqBodyItems.size>0»@RequestBody «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower»«ENDIF») {
+			«http.respKlassType» «http.req.name»(
+			«IF http.reqPrams.size>0»«http.reqQueryKlassType» «http.reqQueryKlassType.toFirstLower»«ENDIF»
+			«IF http.reqPrams.size>0 && http.reqBodyItems.size>0»,«ENDIF»
+			«IF http.reqBodyItems.size>0»@RequestBody «http.reqBodyKlassType» «http.reqBodyKlassType.toFirstLower»«ENDIF»
+			) {
+				«IF http.reqPrams.size>0»System.out.println(«http.reqQueryKlassType.toFirstLower»);«ENDIF»
+				«IF http.reqBodyItems.size>0»System.out.println(«http.reqBodyKlassType.toFirstLower»);«ENDIF»
 				return new «http.respKlassType»();
 			}
 			
