@@ -10,11 +10,14 @@ import org.springframework.data.annotation.Id
 @ToString(singleLine=true)
 class Project {
 	@Id
-	String id             	//ID
-	String name		//项目名称
-	String chineseName
+	String id           //ID
+	String name			//项目名称
+	String label		//项目中文名称
 	String path			//项目路径
 	String root			//根包
-	String url				//部署url
-	String version
+	String language     //语言
+	String url			//部署url
+	String version		//版本标记	
+	String config       //配置
+	String doc          //详细描述
 }

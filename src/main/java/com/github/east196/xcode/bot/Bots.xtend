@@ -13,6 +13,10 @@ class Bots {
 		String[] args) {
 		printClassDefine("TypeInMore/type	defaultType	mongoType	esType")
 	}
+	
+	def fakeIt(String func){
+		// http vs cmd
+	}
 
 	def static Function<String, String> noop() {
 		[in|in]

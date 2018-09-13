@@ -11,18 +11,18 @@ import org.springframework.web.bind.annotation.RestController
 class Application {
 	
 	def static void main(String[] args) {
-		SpringApplication.run(BoonGene, args)
+		SpringApplication.run(Application, args)
 	}
 	
 
 	@RequestMapping("/toRecord")
-	def toRecord(@RequestBody String info) {
-		return SimpleBeanParser.parse(info);
+	def toRecord(String info) {
+		return Base.parse(info);
 	}
 
 	@RequestMapping("/toBean")
-	def toBean(@RequestBody String info) {
-		val map= SimpleBeanParser.parse(info)
+	def toBean(String info) {
+		val map= Base.parse(info)
 		val bean= Base.bean(map.project,map.record,map.fields)
 		bean
 	}

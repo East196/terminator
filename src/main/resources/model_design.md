@@ -17,7 +17,7 @@
 - doc 详细描述
 
 项目和模型是多对多关系，借鉴maker项目搞定多对多预设
-## 模型元数据 model
+## 模型元数据 record
 - id
 - name 名称，一般是英文
 - label 中文名，出现在模块名
@@ -76,6 +76,7 @@ model_name
 field_name
 label 同field.label
 type 同field.type
+config 补充config，以json表示
 doc 详细描述
 
 
@@ -83,6 +84,7 @@ doc 详细描述
 参考
 - [async-validator](https://github.com/yiminghe/async-validator)搭建验证体系
 - [jquery-plugin-validate](http://www.runoob.com/jquery/jquery-plugin-validate.html)
+- jsr303
 实际上就是用object在valid中做验证看是否通过
 在模板中内置这两个对象{{object.xxx}}{{valid.xxx}}
 

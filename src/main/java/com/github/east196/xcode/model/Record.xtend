@@ -11,9 +11,12 @@ import org.springframework.data.annotation.Id
 class Record {
 	@Id
 	String id
-	String projectId
 	String name
-	String chineseName
-	String description
-	String geneType
+	String label
+	String config
+	String doc
+	String projectId
+	String dbType
+	String dbName
+	String tableName
 }

@@ -1,11 +1,99 @@
 package com.github.east196.xcode
 
-import java.util.List
+import com.github.east196.xcode.bot.Bots
+import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
-import com.github.east196.xcode.model.Field
+import java.util.List
 
 class Mongo {
+	
+	def static void main(String[] args) {
+		init
+	}
+
+	def static init() {
+		val tables = Bots.tables('''E:\backup\xcode\统一数据文档0727.doc''')
+		val projectTable = tables.get(0)
+		val projectRow = projectTable.getRow(3)
+		var project = new Project
+		project.version = projectRow.getCell(0).text.trim
+		project.name = projectRow.getCell(1).text.trim
+		project.label = projectRow.getCell(2).text.trim
+		project.path = projectRow.getCell(3).text.trim
+		project.root = projectRow.getCell(4).text.trim
+		project.url = projectRow.getCell(5).text.trim
+		println(project)
+
+		for (var i = 1; i < tables.size; i++) {
+			var table = tables.get(i)
+			var record = new Record
+			val recordRow = table.getRow(3)
+			record.projectId = project.id
+			record.dbType = recordRow.getCell(0).text.trim
+			record.name = recordRow.getCell(1).text.trim
+			record.label = recordRow.getCell(2).text.trim
+			record.doc = recordRow.getCell(3).text.trim
+			println(record)
+			for (var rowIndex = 6; rowIndex < table.numRows; rowIndex++) {
+				var fieldRow = table.getRow(rowIndex)
+				var field = new Field
+				field.projectId = project.id
+				field.recordId = record.id
+				field.type = fieldRow.getCell(0).text.trim
+				field.name = fieldRow.getCell(1).text.trim
+				field.label = fieldRow.getCell(2).text.trim
+				field.doc = fieldRow.getCell(3).text.trim
+				field.required = fieldRow.getCell(4).text.trim
+				field.key = fieldRow.getCell(5).text.trim
+				field.order = fieldRow.getCell(6).text.trim
+				println(field)
+			}
+		}
+	}
+
+	def static gene(Project project, Record record, List<Field> fields) {
+
+		val javaPath = project.root.split("\\.").join("\\")
+		var packageName = record.name.toFirstLower
+
+		var content = bean(project, record, fields)
+		var path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = dao(project, record, fields)
+		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = controller(project, record, fields)
+		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = validator(project, record, fields)
+		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = tableHtml(project, record, fields)
+		path = '''«project.path»\src\main\resources\templates\«record.name».html'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = js(project, record, fields)
+		path = '''«project.path»\src\main\resources\static\js\«record.name».js'''
+		println(path)
+		Bots.copy(content, path)
+
+		content = controllerTxt(project, record, fields)
+		path = '''«project.path»\src\main\resources\static\tmp\«record.name».txt'''
+		println(path)
+		Bots.copy(content, path)
+
+	}
+
 	def static bean(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
@@ -16,18 +104,18 @@ package «basePackageName».«packageName»;
 import com.google.common.base.Objects;
 import org.springframework.data.annotation.Id;
 
-«IF fields.exists[f|f.dataType.equals("repeated")]»
+«IF fields.exists[f|f.type.equals("repeated")]»
 import java.util.List;
 «ENDIF»
-«IF fields.exists[f|f.dataType.equals("datetime")]»
+«IF fields.exists[f|f.type.equals("datetime")]»
 import java.util.Date;
 «ENDIF»
 
 public class «klassType» {
 
 	«FOR f : fields»
-	/**«f.description»**/
-	«IF f.keyType=="P"»@Id«ENDIF»
+	/**«f.doc»**/
+	«IF f.key=="P"»@Id«ENDIF»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ENDFOR»
 
@@ -188,7 +276,7 @@ public class «klassType» implements Validator {
 	@Override
 	public void validate(Object arg0, Errors arg1) {
 		«FOR f : fields.filter[it.required.equals("required")].toList»
-		ValidationUtils.rejectIfEmpty(arg1, "«f.name.toFirstLower»", null, "«f.description»不能为空！");
+		ValidationUtils.rejectIfEmpty(arg1, "«f.name.toFirstLower»", null, "«f.label»不能为空！");
 		«ENDFOR»
 	}
 
@@ -206,7 +294,7 @@ public class «klassType» implements Validator {
 	    <thead>
 	        <tr>
 		        «FOR f : fields»
-		        <th>«f.chineseName»</th>
+		        <th>«f.label»</th>
 		        «ENDFOR»
 	        </tr>
 	    </thead>
@@ -277,7 +365,5 @@ public class «klassType» {
 }
 	    '''
 	}
-	
-	
 
 }
