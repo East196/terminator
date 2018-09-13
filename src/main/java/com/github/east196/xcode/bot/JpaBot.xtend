@@ -11,10 +11,10 @@ import org.apache.poi.hwpf.usermodel.TableIterator
 
 class JpaBot {
 	def static void main(String[] args) {
-		var src = '''C:\Users\Administrator\Desktop\设备平台\huawei设备管理平台数据库设计文档.doc'''
-		val basePackageName = "cn.visionchina.device.huawei"
-		val basePath = '''E:\project\workpace\huawei-web\src\main\'''
-		val beanBasePath = '''E:\project\workpace\huawei\src\main\java\cn\visionchina\device\huawei\''' 
+		var src = '''E:\backup\xcode\huawei设备管理平台数据库设计文档.doc'''
+		val basePackageName = "cn.device"
+		val basePath = '''E:\workspace\github\east196\java\xcode\src\main\'''
+		val beanBasePath = '''E:\workspace\github\east196\java\xcode\src\main\java\cn\device\''' 
 		var is = new FileInputStream(src)
 		var doc = new HWPFDocument(is)
 		var range = doc.range
@@ -101,13 +101,13 @@ class JpaBot {
 			Files.write(content9, file9, Charsets.UTF_8)
 			
 			var content10 = controller(basePackageName, visonTable)
-			var path10 = '''«basePath»java\cn\visionchina\device\huawei\web\controller\«klassType.trim.toFirstUpper»Controller.java'''
+			var path10 = '''«beanBasePath»\controller\«klassType.trim.toFirstUpper»Controller.java'''
 			val file10 = new File(path10)
 			Files.createParentDirs(file10);
 			Files.write(content10, file10, Charsets.UTF_8)
 			
 			var content11 = validator(basePackageName, visonTable)
-			var path11 = '''«basePath»java\cn\visionchina\device\huawei\web\validator\«klassType.trim.toFirstUpper»Validator.java'''
+			var path11 = '''«beanBasePath»\validator\«klassType.trim.toFirstUpper»Validator.java'''
 			val file11 = new File(path11)
 			Files.createParentDirs(file11);
 			Files.write(content11, file11, Charsets.UTF_8)
@@ -962,7 +962,7 @@ var «klassType»TableAdvanced = function() {
 		import org.springframework.data.domain.PageRequest;
 		
 		import «basePackageName».model.«klassType»;
-		import cn.visionchina.device.huawei.utils.SearchFilter;
+		import com.github.east196.xcode.common.SearchFilter;
 		
 		public interface «klassType»Service {
 		
@@ -994,8 +994,8 @@ var «klassType»TableAdvanced = function() {
 		import «basePackageName».jpa.«klassType»Repository;
 		import «basePackageName».model.«klassType»;
 		import «basePackageName».service.«klassType»Service;
-		import cn.visionchina.device.huawei.utils.DynamicSpecifications;
-		import cn.visionchina.device.huawei.utils.SearchFilter;
+		import com.github.east196.xcode.common.DynamicSpecifications;
+		import com.github.east196.xcode.common.SearchFilter;
 		
 		@Service
 		public class «klassType»ServiceImpl implements «klassType»Service{
@@ -1022,7 +1022,7 @@ var «klassType»TableAdvanced = function() {
 
 		    @Override
 		    public void delete(String id) {
-		         «klassType.toFirstLower»Repository.delete(id);
+		         «klassType.toFirstLower»Repository.deleteById(id);
 		    }
 
 		}
@@ -1048,7 +1048,7 @@ var «klassType»TableAdvanced = function() {
 	def static controller(String basePackageName,VisonTable table){
 		var klassType=table.klassType
 		'''
-		package «basePackageName».web.controller;
+		package «basePackageName».controller;
 		
 		import java.util.List;
 		import java.util.Map;
@@ -1072,13 +1072,14 @@ var «klassType»TableAdvanced = function() {
 		import org.springframework.web.bind.annotation.RequestParam;
 		import org.springframework.web.bind.annotation.RestController;
 
-		import «basePackageName».model.DataTableResult;
+		import com.github.east196.xcode.common.DataTableResult;
+		import com.github.east196.xcode.common.SearchFilter;
 		import «basePackageName».model.«klassType»;
 		import «basePackageName».service.«klassType»Service;
-		import «basePackageName».utils.SearchFilter;
-		import «basePackageName».web.response.DataResponse;
-		import «basePackageName».web.response.Response;
-		import «basePackageName».web.validator.«klassType»Validator;
+
+		import com.github.east196.xcode.common.DataResponse;
+		import com.github.east196.xcode.common.Response;
+		import «basePackageName».validator.«klassType»Validator;
 
 		
 		
@@ -1158,7 +1159,7 @@ def static validator(String basePackageName,VisonTable table){
 	var fields=table.fields
 	var klassType=table.klassType
 		'''
-		package «basePackageName».web.validator;
+		package «basePackageName».validator;
 
 		import org.springframework.validation.Errors;
 		import org.springframework.validation.ValidationUtils;
