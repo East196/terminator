@@ -17,6 +17,17 @@ class Bots {
 	def fakeIt(String func){
 		// http vs cmd
 	}
+	
+	def static ok(String ok){
+		switch (ok.toUpperCase){
+			case "YES": true
+			case 'Y': true
+			case 'OK': true
+			case 'ON': true
+			case 'O': true
+			default: false
+		}
+	}
 
 	def static Function<String, String> noop() {
 		[in|in]

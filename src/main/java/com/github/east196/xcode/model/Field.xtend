@@ -19,7 +19,7 @@ class Field {
 	
 	String length
 	String required
-	String key
+	String keyType
 	
 	String projectId				//项目ID
 	String recordId					//纪录ID
@@ -29,7 +29,7 @@ class Field {
 	String fakerFunc
 
 	// 开发平台
-	String order
+	String sortIndex
 	String render
 	String formGroup 
 	String formItem
@@ -38,6 +38,7 @@ class Field {
 	def getJavaType() {
 		switch type{
 			case "int":"Integer"
+			case "long":"Long"
 			default:"String"
 		}
 	}

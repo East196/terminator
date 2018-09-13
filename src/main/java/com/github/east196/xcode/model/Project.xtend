@@ -16,7 +16,7 @@ class Project {
 	String path			//项目路径
 	String root			//根包
 	String language     //语言
-	String url			//部署url
+	String port			//部署url
 	String version		//版本标记	
 	String config       //配置
 	String doc          //详细描述

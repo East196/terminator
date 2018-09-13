@@ -9,6 +9,29 @@ import com.github.east196.xcode.bot.Bots
 
 class Base {
 
+	def static app(Project project) {
+		val javaPath = project.root.split("\\.").join("\\")
+		val basePackageName = project.root
+		var content = '''
+			package «basePackageName»;
+			
+			import org.springframework.boot.SpringApplication
+			import org.springframework.boot.autoconfigure.SpringBootApplication
+			
+			@SpringBootApplication
+			class Application {
+				
+				def static void main(String[] args) {
+					SpringApplication.run(Application, args)
+				}
+				
+			
+			}
+		'''
+		var path = '''«project.path»\src\main\java\«javaPath»\Application.xtend'''
+		Bots.copy(content, path)
+	}
+
 	def static String bean(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
@@ -93,12 +116,17 @@ public class «klassType» {
 		val fields = info.split('/').get(1).split(' ').filter[!it.nullOrEmpty].map [ fieldInfo |
 			val fieldInfos = fieldInfo.split(":")
 			var field = new Field
+			field.name = fieldInfos.get(0)
 			if (fieldInfos.length == 2) {
 				field.type = fieldInfos.get(1)
 			} else {
 				field.type = "string"
 			}
-			field.name = fieldInfos.get(0)
+			if (fieldInfos.length == 3) {
+				field.label = fieldInfos.get(2)
+			} else {
+				field.label = ""
+			}
 			return field
 		].toList
 		new Three(project, record, fields)
@@ -114,10 +142,10 @@ public class «klassType» {
 		project.label = projectRow.getCell(2).text.trim
 		project.path = projectRow.getCell(3).text.trim
 		project.root = projectRow.getCell(4).text.trim
-		project.url = projectRow.getCell(5).text.trim
+		project.port = projectRow.getCell(5).text.trim
 		println(project)
 
-		val threes = #[]
+		val threes = newArrayList()
 		for (var i = 1; i < tables.size; i++) {
 			var table = tables.get(i)
 			var record = new Record
@@ -128,7 +156,7 @@ public class «klassType» {
 			record.label = recordRow.getCell(2).text.trim
 			record.doc = recordRow.getCell(3).text.trim
 			println(record)
-			val fields = #[]
+			val fields = newArrayList()
 			for (var rowIndex = 6; rowIndex < table.numRows; rowIndex++) {
 				var fieldRow = table.getRow(rowIndex)
 				var field = new Field
@@ -139,8 +167,8 @@ public class «klassType» {
 				field.label = fieldRow.getCell(2).text.trim
 				field.doc = fieldRow.getCell(3).text.trim
 				field.required = fieldRow.getCell(4).text.trim
-				field.key = fieldRow.getCell(5).text.trim
-				field.order = fieldRow.getCell(6).text.trim
+				field.keyType = fieldRow.getCell(5).text.trim
+				field.sortIndex = fieldRow.getCell(6).text.trim
 				println(field)
 				fields.add(field)
 			}

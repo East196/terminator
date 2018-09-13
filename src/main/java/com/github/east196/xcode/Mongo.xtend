@@ -7,49 +7,12 @@ import com.github.east196.xcode.model.Record
 import java.util.List
 
 class Mongo {
-	
+
 	def static void main(String[] args) {
-		init
-	}
-
-	def static init() {
-		val tables = Bots.tables('''E:\backup\xcode\统一数据文档0727.doc''')
-		val projectTable = tables.get(0)
-		val projectRow = projectTable.getRow(3)
-		var project = new Project
-		project.version = projectRow.getCell(0).text.trim
-		project.name = projectRow.getCell(1).text.trim
-		project.label = projectRow.getCell(2).text.trim
-		project.path = projectRow.getCell(3).text.trim
-		project.root = projectRow.getCell(4).text.trim
-		project.url = projectRow.getCell(5).text.trim
-		println(project)
-
-		for (var i = 1; i < tables.size; i++) {
-			var table = tables.get(i)
-			var record = new Record
-			val recordRow = table.getRow(3)
-			record.projectId = project.id
-			record.dbType = recordRow.getCell(0).text.trim
-			record.name = recordRow.getCell(1).text.trim
-			record.label = recordRow.getCell(2).text.trim
-			record.doc = recordRow.getCell(3).text.trim
-			println(record)
-			for (var rowIndex = 6; rowIndex < table.numRows; rowIndex++) {
-				var fieldRow = table.getRow(rowIndex)
-				var field = new Field
-				field.projectId = project.id
-				field.recordId = record.id
-				field.type = fieldRow.getCell(0).text.trim
-				field.name = fieldRow.getCell(1).text.trim
-				field.label = fieldRow.getCell(2).text.trim
-				field.doc = fieldRow.getCell(3).text.trim
-				field.required = fieldRow.getCell(4).text.trim
-				field.key = fieldRow.getCell(5).text.trim
-				field.order = fieldRow.getCell(6).text.trim
-				println(field)
-			}
-		}
+		Base.init('''E:\backup\xcode\统一数据文档20180913.doc''').forEach [ three |
+			gene(three.project, three.record, three.fields)
+			Base.app(three.project)
+		]
 	}
 
 	def static gene(Project project, Record record, List<Field> fields) {
@@ -58,22 +21,22 @@ class Mongo {
 		var packageName = record.name.toFirstLower
 
 		var content = bean(project, record, fields)
-		var path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
+		var path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
 		println(path)
 		Bots.copy(content, path)
 
 		content = dao(project, record, fields)
-		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
+		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
 		println(path)
 		Bots.copy(content, path)
 
 		content = controller(project, record, fields)
-		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
+		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
 		println(path)
 		Bots.copy(content, path)
 
 		content = validator(project, record, fields)
-		path = '''«project.path»\src\main\xtend\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
+		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
 		println(path)
 		Bots.copy(content, path)
 
@@ -115,7 +78,7 @@ public class «klassType» {
 
 	«FOR f : fields»
 	/**«f.doc»**/
-	«IF f.key=="P"»@Id«ENDIF»
+	«IF f.getKeyType=="P"»@Id«ENDIF»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ENDFOR»
 
@@ -207,8 +170,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import «basePackageName».common.DataResponse;
-import «basePackageName».common.Response;
+import com.github.east196.xcode.common.DataResponse;
+import com.github.east196.xcode.common.Response;
 
 @RestController
 @RequestMapping("/controller/v1/«beanType.toFirstLower»")
@@ -242,7 +205,7 @@ public class «klassType» {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable String id) {
 		LOGGER.debug("id:  {}", id);
-		«daoType.toFirstLower».delete(id);
+		«daoType.toFirstLower».deleteById(id);
 		return new Response("0", "ok");
 	}
 
