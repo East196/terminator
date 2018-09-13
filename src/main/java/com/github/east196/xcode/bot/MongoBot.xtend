@@ -8,12 +8,11 @@ import com.typesafe.config.ConfigFactory
 class MongoBot {
 
     def static void main(String[] args) {
-        var conf=ConfigFactory.load
-        var src = conf.getString("src")
-        val basePackageName = conf.getString("basePackageName")
-        val basePath = conf.getString("basePath")
-        val beanBasePath = conf.getString("beanBasePath")
-        val beanTestBasePath = conf.getString("beanTestBasePath")
+        var src = '''E:\backup\xcode\Mongo数据库设计文档.doc'''
+        val basePackageName = '''cn.device.mongo'''
+        val basePath = '''E:\workspace\github\east196\java\xcode\src\main\'''
+        val beanBasePath = '''E:\workspace\github\east196\java\xcode\src\main\java\cn\device\mongo\'''
+        val beanTestBasePath = '''E:\workspace\github\east196\java\xcode\src\test\java\cn\device\mongo\'''
 
         val tables = Bots.tables(src)
         println("--表格总数："+tables.size())
@@ -985,7 +984,7 @@ var «klassType»TableAdvanced = function() {
 		import org.springframework.data.domain.Page;
 		import org.springframework.data.domain.PageRequest;
 
-		import io.javaboon.SearchFilter;
+		import com.github.east196.xcode.common.SearchFilter;
 
 		public interface «klassType»Service {
 
@@ -1013,7 +1012,7 @@ var «klassType»TableAdvanced = function() {
 		import org.springframework.data.domain.PageRequest;
 		import org.springframework.stereotype.Service;
 
-		import io.javaboon.SearchFilter;
+		import com.github.east196.xcode.common.SearchFilter;
 
 		@Service
 		public class «klassType»MongoServiceImpl implements «klassType»Service{
@@ -1038,7 +1037,7 @@ var «klassType»TableAdvanced = function() {
 
 		    @Override
 		    public void delete(String id) {
-		         «klassType.toFirstLower»Mongo.delete(id);
+		         «klassType.toFirstLower»Mongo.deleteById(id);
 		    }
 
 		}
@@ -1051,7 +1050,7 @@ var «klassType»TableAdvanced = function() {
         package «basePackageName».«klassType.trim.toFirstLower»;
 
 		import org.springframework.data.mongodb.repository.MongoRepository;
-		import «basePackageName».mongo.MongoSpecificationExecutor;
+		import com.github.east196.xcode.common.MongoSpecificationExecutor;
 
 		public interface «klassType»Mongo extends MongoRepository<«klassType», String>, MongoSpecificationExecutor {
 			// add more ...
@@ -1063,7 +1062,7 @@ var «klassType»TableAdvanced = function() {
         '''
         package «basePackageName».«klassType.trim.toFirstLower»;
 
-		import «basePackageName».mongo.MongoSpecificationExecutorImpl;
+		import com.github.east196.xcode.common.MongoSpecificationExecutorImpl;
 
 		public class «klassType»MongoImpl extends MongoSpecificationExecutorImpl {
 		     // add more ...
@@ -1097,10 +1096,10 @@ var «klassType»TableAdvanced = function() {
 		import org.springframework.web.bind.annotation.RequestParam;
 		import org.springframework.web.bind.annotation.RestController;
 
-		import «basePackageName».model.DataTableResult;
-		import «basePackageName».model.DataResponse;
-		import «basePackageName».model.Response;
-		import io.javaboon.SearchFilter;
+		import com.github.east196.xcode.common.DataTableResult;
+		import com.github.east196.xcode.common.DataResponse;
+		import com.github.east196.xcode.common.Response;
+		import com.github.east196.xcode.common.SearchFilter;
 
 		@RestController
 		@RequestMapping("/controller/v1/«klassType.toFirstLower»")
@@ -1212,9 +1211,9 @@ var «klassType»TableAdvanced = function() {
 		import java.util.Map;
 
 		import «basePackageName».«klassType.toFirstLower».«klassType»;
-		import «basePackageName».model.DataResponse;
-		import «basePackageName».model.DataTableResult;
-		import «basePackageName».model.Response;
+		import com.github.east196.xcode.common.DataResponse;
+		import com.github.east196.xcode.common.DataTableResult;
+		import com.github.east196.xcode.common.Response;
 		import retrofit.http.Body;
 		import retrofit.http.DELETE;
 		import retrofit.http.GET;
@@ -1263,7 +1262,7 @@ var «klassType»TableAdvanced = function() {
 		import org.junit.Test;
 
 		import «basePackageName».«klassName».«klassType»;
-		import «basePackageName».model.DataResponse;
+		import com.github.east196.xcode.common.DataResponse;
 		import retrofit.RestAdapter;
 		import retrofit.RestAdapter.LogLevel;
 

@@ -55,7 +55,7 @@ class TransGene {
 
 	}
 
-	// TODO
+	// TODO 目的是取代dozer，开发时可以使用反射，部署时可以用adaptor
 	// 输入A.class，B.class，反射分析获得A2B.doc
 	// ----手动补充A2B.doc
 	// 通过A2B.doc生成 A2B.java，A2BAdaptors.java
