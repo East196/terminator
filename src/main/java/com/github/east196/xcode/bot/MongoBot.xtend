@@ -3,7 +3,6 @@ package com.github.east196.xcode.bot
 import com.google.common.base.CaseFormat
 import java.util.List
 import org.eclipse.xtend.lib.annotations.Data
-import com.typesafe.config.ConfigFactory
 
 class MongoBot {
 

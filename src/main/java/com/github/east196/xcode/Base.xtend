@@ -169,6 +169,7 @@ public class «klassType» {
 				field.required = fieldRow.getCell(4).text.trim
 				field.keyType = fieldRow.getCell(5).text.trim
 				field.sortIndex = fieldRow.getCell(6).text.trim
+				field.show = fieldRow.getCell(7).text.trim
 				println(field)
 				fields.add(field)
 			}
