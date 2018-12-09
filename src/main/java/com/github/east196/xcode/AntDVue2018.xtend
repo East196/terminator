@@ -5,15 +5,12 @@ import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
-import com.google.common.collect.Lists
-import java.util.Collections
-import org.apache.commons.collections4.CollectionUtils
-import org.boon.Boon
+import org.boon.Lists
 
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20181206.doc''').forEach [ three |
+		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}
@@ -39,38 +36,74 @@ class AntDVue2018 {
 	}
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
-		val sfas = org.boon.Lists.slcEnd(searchFields,3)
-		val sfbs = org.boon.Lists.slc(searchFields,3)
+		val sfas = Lists.slcEnd(searchFields,3)
+		val sfbs = Lists.slc(searchFields,3)
 		'''
 <template>
   <div class="table-page-search-wrapper">
     <a-form layout="inline" @submit="handleSubmit" :autoFormCreate="(form)=>{this.form = form}">
       <a-row :gutter="48">
 «FOR sf : sfas»
+«IF sf.keyType == "M21"»
+<a-col :md="8" :sm="24">
+		<a-form-item
+		  label="«sf.label»"
+		  fieldDecoratorId="«sf.name»_id_LIKE"
+		  :fieldDecoratorOptions="{rules: [
+		  «IF sf.required=="required"»
+		  { required: true, message: '请输入«sf.label»!' }
+		  «ENDIF»
+		  ]}"
+		>
+			<a-select placeholder="请选择" :defaultActiveFirstOption="false">
+			  <a-select-option v-for="d in «sf.name»s" :key="d.id">{{d.name}}</a-select-option>
+			</a-select>
+		</a-form-item>
+</a-col>
+«ELSE»
         <a-col :md="8" :sm="24">
           <a-form-item
             label="«sf.label»"
             fieldDecoratorId="«sf.name»_LIKE"
-            :fieldDecoratorOptions="{rules: [
-            ]}"
+		  :fieldDecoratorOptions="{rules: [
+		  «IF sf.required=="required"»
+		  { required: true, message: '请输入«sf.label»!' }
+		  «ENDIF»
+		  ]}"
           >
             <a-input/>
           </a-form-item>
         </a-col>
+«ENDIF»
 «ENDFOR»
         <template v-if="advanced">
 
 «FOR sf : sfbs»
+«IF sf.keyType == "M21"»
+<a-col :md="8" :sm="24">
+		<a-form-item
+		  label="«sf.label»"
+		  fieldDecoratorId="«sf.name»_id_LIKE"
+		  :fieldDecoratorOptions="{rules: [
+		  ]}"
+		>
+			<a-select placeholder="请选择" :defaultActiveFirstOption="false">
+			  <a-select-option v-for="d in «sf.name»s" :key="d.id">{{d.«IF fields.filter[it.name=="label"].toList.length>0»label«ELSE»name«ENDIF»}}</a-select-option>
+			</a-select>
+		</a-form-item>
+</a-col>
+«ELSE»
         <a-col :md="8" :sm="24">
           <a-form-item
             label="«sf.label»"
             fieldDecoratorId="«sf.name»_LIKE"
-            :fieldDecoratorOptions="{rules: [
-            ]}"
+		  :fieldDecoratorOptions="{rules: [
+		  ]}"
           >
             <a-input/>
           </a-form-item>
         </a-col>
+«ENDIF»
 «ENDFOR»
 
         </template>
@@ -95,6 +128,7 @@ class AntDVue2018 {
 export default {
   name: "«record.name.toFirstUpper»Search",
   components: {},
+  props:[«FOR f:fields»«IF f.keyType=="M21"»"«f.name»s",«ENDIF»«ENDFOR»],
   data() {
     return {
       // 高级搜索 展开/关闭
@@ -133,7 +167,7 @@ export default {
 		'''
 <template>
   <a-card title="«record.label»列表" :bordered="false">
-    <«record.name.toFirstUpper»Search @«record.name»SearchForm="handleSearchForm" />
+    <«record.name.toFirstUpper»Search «FOR f:fields»«IF f.keyType=="M21"»:«f.name»s="«f.name»s" «ENDIF»«ENDFOR» @«record.name»SearchForm="handleSearchForm" />
 
     <div class="table-operator">
       <a-button type="primary" icon="plus" @click="handleCreate">新建</a-button>
@@ -186,11 +220,9 @@ export default {
 		  «ENDIF»
 		  ]}"
 		>
-		    <a-select placeholder="请选择" default-value="0">
-		      <a-select-option value="0">全部</a-select-option>
-		      <a-select-option value="1">关闭</a-select-option>
-		      <a-select-option value="2">运行中</a-select-option>
-		    </a-select>
+			<a-select placeholder="请选择" :defaultActiveFirstOption="false">
+			  <a-select-option v-for="d in «f.name»s" :key="d.id">{{d.name}}</a-select-option>
+			</a-select>
 		</a-form-item>
 «ELSEIF f.keyType == "12M"»
 
@@ -258,10 +290,28 @@ export default {
       advanced: true,
       // 查询参数
       queryParam: {},
+      
+    «FOR f : fields»
+      «IF f.keyType == "M21"»
+      «f.name»s: [],
+      «ENDIF»
+    «ENDFOR»
       // 表头
       columns: [
       «FOR f : fields»
-        «IF f.keyType != "12M"»
+        «IF f.keyType == "12M"»
+        «ELSEIF f.keyType == "M21"»
+        {
+        	title: "«f.label»",
+        	dataIndex: "«f.name»",
+        	customRender: text => {
+        		if (_.has(text,"name")){
+        			return text.name
+        		}else{
+        		}	return ""
+        	}
+        },
+        «ELSE»
         {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
@@ -291,7 +341,18 @@ export default {
       selectedRows: []
     };
   },
-  created() {},
+  mounted() {
+«FOR f : fields»
+  «IF f.keyType == "M21"»
+    this.$http
+          .get("http://127.0.0.1:8888/controller/v1/«f.name»/", {})
+          .then(res => {
+            console.log("-------------«f.name»s", res.data);
+            this.«f.name»s = res.data;
+          });
+  «ENDIF»
+«ENDFOR»
+  },
   methods: {
     handleCreate(e) {
       this.mdl = {};
@@ -361,7 +422,10 @@ export default {
       this.form.resetFields();
     },
     handleSearchForm(data){
-      this.queryParam=data,
+      var keys = _.map(_.keys(data),key=>key.replace("_id_", ".id_"))
+      var values = _.values(data)
+      this.queryParam = _.zipObject(keys, values);
+      console.log(this.queryParam);
       this.$refs.table.refresh();
     },
     handleBatchDelete(e) {
