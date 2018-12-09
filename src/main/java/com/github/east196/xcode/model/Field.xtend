@@ -47,6 +47,7 @@ class Field {
 			case "datetime": "Date"
 			case "int": "Integer"
 			case "long": "Long"
+			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper
 			default: type.toFirstUpper
 		}
 	}

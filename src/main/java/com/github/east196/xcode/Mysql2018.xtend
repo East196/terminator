@@ -45,23 +45,41 @@ class Mysql2018 {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
 		var packageName = record.name.toFirstLower
+		var beanName = record.name.toFirstLower
 		'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
 import java.util.Date;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import org.hibernate.annotations.GenericGenerator;
+import org.hibernate.annotations.ManyToAny;
+import org.springframework.data.annotation.Transient;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+«FOR f : fields»
+«IF f.getKeyType=="M21"»
+import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
+«ENDIF»
+«IF f.getKeyType=="12M"»
+import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
+«ENDIF»
+«ENDFOR»
 import lombok.Data;
 
 @Data
 @Entity
+@JsonIgnoreProperties(ignoreUnknown = true, value = {"hibernateLazyInitializer", "handler", "fieldHandler"})
 public class «klassType» {
 
 	«FOR f : fields»
@@ -70,8 +88,19 @@ public class «klassType» {
 	@Id
 	@GenericGenerator(name="idGenerator", strategy="uuid") //这个是hibernate的注解/生成32位UUID
 	@GeneratedValue(generator="idGenerator")
-	«ENDIF»
+	@Column(length = 32)
 	private «f.javaType» «f.name.toFirstLower»;
+	«ELSEIF f.getKeyType=="M21"»
+	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»s"})
+	@ManyToOne(fetch=FetchType.EAGER,optional=false)
+	private «f.javaType» «f.name.toFirstLower»;
+	«ELSEIF f.getKeyType=="12M"»
+	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»"})
+	@OneToMany(fetch=FetchType.LAZY,mappedBy="«beanName»",orphanRemoval=false)
+	private List<«f.javaType»> «f.name.toFirstLower»;
+	«ELSE»
+	private «f.javaType» «f.name.toFirstLower»;
+	«ENDIF»
 	«ENDFOR»
 
 }
@@ -188,7 +217,7 @@ public class «klassType» {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable String id) {
 		LOGGER.debug("id:  {}", id);
-		«daoType.toFirstLower».delete(id);
+		«daoType.toFirstLower».deleteById(id);
 		return new Response("0", "ok");
 	}
 	
@@ -199,7 +228,7 @@ public class «klassType» {
 	public Response «beanType.toFirstLower»Deletes(@RequestBody List<String> ids) {
 		LOGGER.debug("ids:  {}", ids);
 		for (String id : ids) {
-			«daoType.toFirstLower».delete(id);
+			«daoType.toFirstLower».deleteById(id);
 		}
 		return new Response("0", "ok");
 	}
