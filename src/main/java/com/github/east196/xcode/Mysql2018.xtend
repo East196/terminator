@@ -86,8 +86,8 @@ public class «klassType» {
 	/**«f.doc»**/
 	«IF f.getKeyType=="P"»
 	@Id
-	@GenericGenerator(name="idGenerator", strategy="uuid") //这个是hibernate的注解/生成32位UUID
-	@GeneratedValue(generator="idGenerator")
+	@GenericGenerator(name="system-uuid", strategy="uuid") //这个是hibernate的注解/生成32位UUID
+	@GeneratedValue(generator="system-uuid")
 	@Column(length = 32)
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="M21"»
@@ -95,6 +95,7 @@ public class «klassType» {
 	@ManyToOne(fetch=FetchType.EAGER,optional=false)
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="12M"»
+	@Transient
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»"})
 	@OneToMany(fetch=FetchType.LAZY,mappedBy="«beanName»",orphanRemoval=false)
 	private List<«f.javaType»> «f.name.toFirstLower»;
@@ -184,10 +185,9 @@ public class «klassType» {
 	public DataResponse<TableResult<List<«beanType»>>> page(@RequestParam(value = "draw", required = false, defaultValue = "1") Integer sEcho,
 	@RequestParam(value = "start", required = false, defaultValue = "0") Integer iDisplayStart,
 	@RequestParam(value = "length", required = false, defaultValue = "20") Integer numPerPage,
-	HttpServletRequest request) {
-		Map<String, String[]> requestParameterMap = request.getParameterMap();
-		List<SearchFilter> searchFilters = SearchFilter.from(requestParameterMap, «beanType».class);
-		PageRequest pageRequest = SearchFilter.sort(requestParameterMap, iDisplayStart, numPerPage);
+	@RequestBody Map<String, String> queryMap) {
+		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
+		PageRequest pageRequest = SearchFilter.sortQueryMap(queryMap, iDisplayStart, numPerPage);
     	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
 		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
 		TableResult<List<«beanType»>> tableResult = new TableResult<List<«beanType»>>();
