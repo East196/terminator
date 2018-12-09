@@ -10,14 +10,14 @@ import org.boon.Lists
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
+		Base.init('''J:\East\develop\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}
 
 	def static gene(Project project, Record record, List<Field> fields) {
 
-		val webPath = '''E:\workspace\iot\iotgo\workspace\bjcloudweb'''
+		val webPath = '''J:\East\develop\bjcloudweb'''
 		
 		var CharSequence content=''''''
 		var path=""
@@ -36,8 +36,8 @@ class AntDVue2018 {
 	}
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
-		val sfas = Lists.slcEnd(searchFields,3)
-		val sfbs = Lists.slc(searchFields,3)
+		val sfas = Lists.slcEnd(searchFields,2)
+		val sfbs = Lists.slc(searchFields,2)
 		'''
 <template>
   <div class="table-page-search-wrapper">
@@ -50,9 +50,6 @@ class AntDVue2018 {
 		  label="«sf.label»"
 		  fieldDecoratorId="«sf.name»_id_LIKE"
 		  :fieldDecoratorOptions="{rules: [
-		  «IF sf.required=="required"»
-		  { required: true, message: '请输入«sf.label»!' }
-		  «ENDIF»
 		  ]}"
 		>
 			<a-select placeholder="请选择" :defaultActiveFirstOption="false">
@@ -66,9 +63,6 @@ class AntDVue2018 {
             label="«sf.label»"
             fieldDecoratorId="«sf.name»_LIKE"
 		  :fieldDecoratorOptions="{rules: [
-		  «IF sf.required=="required"»
-		  { required: true, message: '请输入«sf.label»!' }
-		  «ENDIF»
 		  ]}"
           >
             <a-input/>

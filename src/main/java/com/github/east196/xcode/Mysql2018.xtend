@@ -9,7 +9,7 @@ import java.util.List
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20181206.doc''').forEach [ three |
+		Base.init('''J:\East\develop\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}
