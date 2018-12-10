@@ -143,6 +143,11 @@ public class «klassType» {
 		project.path = projectRow.getCell(3).text.trim
 		project.root = projectRow.getCell(4).text.trim
 		project.port = projectRow.getCell(5).text.trim
+		
+		val webRow = projectTable.getRow(4)
+		project.webPath = webRow.getCell(3).text.trim
+		project.webRoot = webRow.getCell(4).text.trim
+		
 		println(project)
 
 		val threes = newArrayList()

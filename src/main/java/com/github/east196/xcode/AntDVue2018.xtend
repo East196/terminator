@@ -10,14 +10,14 @@ import org.boon.Lists
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		Base.init('''J:\East\develop\统一数据文档20181209.doc''').forEach [ three |
+		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}
 
 	def static gene(Project project, Record record, List<Field> fields) {
 
-		val webPath = '''J:\East\develop\bjcloudweb'''
+		val webPath = project.webPath
 		
 		var CharSequence content=''''''
 		var path=""
@@ -44,7 +44,7 @@ class AntDVue2018 {
     <a-form layout="inline" @submit="handleSubmit" :autoFormCreate="(form)=>{this.form = form}">
       <a-row :gutter="48">
 «FOR sf : sfas»
-«IF sf.keyType == "M21"»
+«IF sf.keyType == "M21"|| sf.keyType =="121"»
 <a-col :md="8" :sm="24">
 		<a-form-item
 		  label="«sf.label»"
@@ -73,7 +73,7 @@ class AntDVue2018 {
         <template v-if="advanced">
 
 «FOR sf : sfbs»
-«IF sf.keyType == "M21"»
+«IF sf.keyType == "M21"|| sf.keyType =="121"»
 <a-col :md="8" :sm="24">
 		<a-form-item
 		  label="«sf.label»"
@@ -122,7 +122,7 @@ class AntDVue2018 {
 export default {
   name: "«record.name.toFirstUpper»Search",
   components: {},
-  props:[«FOR f:fields»«IF f.keyType=="M21"»"«f.name»s",«ENDIF»«ENDFOR»],
+  props:[«FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»s",«ENDIF»«ENDFOR»],
   data() {
     return {
       // 高级搜索 展开/关闭
@@ -161,12 +161,10 @@ export default {
 		'''
 <template>
   <a-card title="«record.label»列表" :bordered="false">
-    <«record.name.toFirstUpper»Search «FOR f:fields»«IF f.keyType=="M21"»:«f.name»s="«f.name»s" «ENDIF»«ENDFOR» @«record.name»SearchForm="handleSearchForm" />
+    <«record.name.toFirstUpper»Search «FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»:«f.name»s="«f.name»s" «ENDIF»«ENDFOR» @«record.name»SearchForm="handleSearchForm" />
 
     <div class="table-operator">
       <a-button type="primary" icon="plus" @click="handleCreate">新建</a-button>
-      <a-button type="primary" icon="plus">导入</a-button>
-      <a-button type="primary" icon="plus">导出</a-button>
       <a-dropdown v-if="selectedRowKeys.length > 0">
         <a-menu slot="overlay">
           <a-menu-item key="1" @click="handleBatchDelete">
@@ -202,7 +200,7 @@ export default {
         <a-form-item label="ID" :labelCol="labelCol" :wrapperCol="wrapperCol" fieldDecoratorId="id">
           <a-input/>
         </a-form-item>
-«ELSEIF f.keyType == "M21"»
+«ELSEIF f.keyType == "M21"|| f.keyType =="121"»
 		<a-form-item
 		  :labelCol="labelCol"
 		  :wrapperCol="wrapperCol"
@@ -286,7 +284,7 @@ export default {
       queryParam: {},
       
     «FOR f : fields»
-      «IF f.keyType == "M21"»
+      «IF f.keyType == "M21"|| f.keyType =="121"»
       «f.name»s: [],
       «ENDIF»
     «ENDFOR»
@@ -294,7 +292,7 @@ export default {
       columns: [
       «FOR f : fields»
         «IF f.keyType == "12M"»
-        «ELSEIF f.keyType == "M21"»
+        «ELSEIF f.keyType == "M21"|| f.keyType =="121"»
         {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
@@ -322,9 +320,10 @@ export default {
       ],
       // 加载数据方法 必须为 Promise 对象
       loadData: parameter => {
+      	console.log("---",parameter);
       	var body = Object.assign(parameter, this.queryParam)
         return this.$http
-          .post("http://127.0.0.1:8888/controller/v1/«record.name»/page", body)
+          .post(`http://127.0.0.1:8888/controller/v1/«record.name»/page?pageNo=${parameter.pageNo}&pageSize=${parameter.pageSize}`, body)
           .then(res => {
             console.log("-------------", res);
             return res.data;
@@ -337,7 +336,7 @@ export default {
   },
   mounted() {
 «FOR f : fields»
-  «IF f.keyType == "M21"»
+  «IF f.keyType == "M21"|| f.keyType =="121"»
     this.$http
           .get("http://127.0.0.1:8888/controller/v1/«f.name»/", {})
           .then(res => {

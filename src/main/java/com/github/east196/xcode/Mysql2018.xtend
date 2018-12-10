@@ -9,10 +9,11 @@ import java.util.List
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		Base.init('''J:\East\develop\统一数据文档20181209.doc''').forEach [ three |
+		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}
+
 
 	def static gene(Project project, Record record, List<Field> fields) {
 
@@ -61,6 +62,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
@@ -72,6 +74,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
 «ENDIF»
 «IF f.getKeyType=="12M"»
+import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
+«ENDIF»
+«IF f.getKeyType=="121"»
 import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
 «ENDIF»
 «ENDFOR»
@@ -99,6 +104,9 @@ public class «klassType» {
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»"})
 	@OneToMany(fetch=FetchType.LAZY,mappedBy="«beanName»",orphanRemoval=false)
 	private List<«f.javaType»> «f.name.toFirstLower»;
+	«ELSEIF f.getKeyType=="121"»
+	@OneToOne(fetch=FetchType.EAGER)
+	private «f.javaType» «f.name.toFirstLower»;
 	«ELSE»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ENDIF»
@@ -120,6 +128,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpecificationExecutor<«beanType»>{
+	
+	«FOR f : fields»
+	«IF f.getKeyType=="U"»
+	public «beanType» findBy«f.name.toFirstUpper»(«f.javaType» «f.name»);
+	«ENDIF»
+	«ENDFOR»
 	// add more ...
 }
 		'''
@@ -127,6 +141,7 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 
 	def static controller(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
+		val commonPackageName = project.root.split("\\.").subList(0,project.root.split("\\.").length-1).join(".")
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var klassType = record.name.toFirstUpper + "Controller"
@@ -157,11 +172,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.yjupi.common.DynamicSpecifications;
-import com.yjupi.common.SearchFilter;
-import com.yjupi.common.vo.DataResponse;
-import com.yjupi.common.vo.Response;
-import com.yjupi.common.vo.TableResult;
+import «commonPackageName».common.DynamicSpecifications;
+import «commonPackageName».common.SearchFilter;
+import «commonPackageName».common.vo.DataResponse;
+import «commonPackageName».common.vo.Response;
+import «commonPackageName».common.vo.TableResult;
 
 @RestController
 @RequestMapping("/controller/v1/«beanType.toFirstLower»")
@@ -182,16 +197,16 @@ public class «klassType» {
 	}
 	
 	@RequestMapping(value = "/page", method = RequestMethod.POST)
-	public DataResponse<TableResult<List<«beanType»>>> page(@RequestParam(value = "draw", required = false, defaultValue = "1") Integer sEcho,
-	@RequestParam(value = "start", required = false, defaultValue = "0") Integer iDisplayStart,
-	@RequestParam(value = "length", required = false, defaultValue = "20") Integer numPerPage,
+	public DataResponse<TableResult<List<«beanType»>>> page(
+	@RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
+	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
 	@RequestBody Map<String, String> queryMap) {
 		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
-		PageRequest pageRequest = SearchFilter.sortQueryMap(queryMap, iDisplayStart, numPerPage);
+		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize);
     	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
 		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
 		TableResult<List<«beanType»>> tableResult = new TableResult<List<«beanType»>>();
-		tableResult.setPageNo(«beanType.toFirstLower»s.getNumber());;
+		tableResult.setPageNo(«beanType.toFirstLower»s.getNumber()+1);
 		tableResult.setPageSize(«beanType.toFirstLower»s.getSize());
 		tableResult.setTotalCount(«beanType.toFirstLower»s.getTotalElements());
 		tableResult.setTotalPage(«beanType.toFirstLower»s.getTotalPages());
@@ -213,6 +228,8 @@ public class «klassType» {
 		    return new Response("0", "ok");
 		}
 	}
+	
+	
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable String id) {
@@ -239,7 +256,7 @@ public class «klassType» {
 	}
 }
 		'''
-	}
+	}//TODO PUT 方法合并对象 
 
 	def static validator(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root

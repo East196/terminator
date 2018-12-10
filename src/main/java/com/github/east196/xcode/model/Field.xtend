@@ -45,6 +45,7 @@ class Field {
 			case "bigint": "long"
 			case "varchar": "String"
 			case "datetime": "Date"
+			case "date": "Date"
 			case "int": "Integer"
 			case "long": "Long"
 			case "double": "Double"

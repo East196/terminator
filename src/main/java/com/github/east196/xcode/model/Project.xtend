@@ -20,4 +20,8 @@ class Project {
 	String version		//版本标记	
 	String config       //配置
 	String doc          //详细描述
+	
+	
+	String webPath
+	String webRoot
 }
