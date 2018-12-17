@@ -57,6 +57,8 @@ class AntDVue2018 {
 			</a-select>
 		</a-form-item>
 </a-col>
+«ELSEIF sf.type == "date"»
+«ELSEIF sf.type == "datetime"»
 «ELSE»
         <a-col :md="8" :sm="24">
           <a-form-item
@@ -86,6 +88,8 @@ class AntDVue2018 {
 			</a-select>
 		</a-form-item>
 </a-col>
+«ELSEIF sf.type == "date"»
+«ELSEIF sf.type == "datetime"»
 «ELSE»
         <a-col :md="8" :sm="24">
           <a-form-item
@@ -197,9 +201,9 @@ export default {
 
 «FOR f : fields»
 «IF f.keyType == "P"»
-        <a-form-item label="ID" :labelCol="labelCol" :wrapperCol="wrapperCol" fieldDecoratorId="id">
-          <a-input/>
-        </a-form-item>
+<a-form-item label="ID" v-show="false" :labelCol="labelCol" :wrapperCol="wrapperCol" fieldDecoratorId="id">
+  <a-input/>
+</a-form-item>
 «ELSEIF f.keyType == "M21"|| f.keyType =="121"»
 		<a-form-item
 		  :labelCol="labelCol"
@@ -256,6 +260,8 @@ import AInput from "ant-design-vue/es/input/Input";
 
 import «record.name.toFirstUpper»Search from "@/views/device/«record.name.toFirstUpper»Search";
 
+var moment = require("moment");
+
 export default {
   name: "«record.name.toFirstUpper»List",
   components: {
@@ -291,11 +297,13 @@ export default {
       // 表头
       columns: [
       «FOR f : fields»
-        «IF f.keyType == "12M"»
+      	«IF f.keyType == "P"»
+        «ELSEIF f.keyType == "12M"»
         «ELSEIF f.keyType == "M21"|| f.keyType =="121"»
         {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
+        	key: "«f.name»",       	
         	customRender: text => {
         		if (_.has(text,"name")){
         			return text.name
@@ -303,7 +311,35 @@ export default {
         		}	return ""
         	}
         },
-        «ELSE»
+        «ELSEIF f.type == "datetime"»
+        {
+          title: "«f.label»",
+          dataIndex: "«f.name»",
+          key: "«f.name»",       	
+          width: "120px",
+		  customRender: text => {
+		    if (text) {
+		      return moment(text).format("YYYY-MM-DD HH:mm:ss");
+		    } else {
+		      return "";
+		    }
+		  }
+        },
+        «ELSEIF f.type == "date"»
+        {
+          title: "«f.label»",
+          dataIndex: "«f.name»",
+          key: "«f.name»",       	
+          width: "120px",
+		  customRender: text => {
+		    if (text) {
+		      return moment(text).format("YYYY-MM-DD");
+		    } else {
+		      return "";
+		    }
+		  }
+        },
+         «ELSE»
         {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
@@ -312,18 +348,22 @@ export default {
         «ENDIF»
       «ENDFOR»
         {
-          table: "操作",
+          title: "操作",
           dataIndex: "action",
-          width: "80px",
+          width: "120px",
           scopedSlots: { customRender: "action" }
         }
       ],
       // 加载数据方法 必须为 Promise 对象
       loadData: parameter => {
-      	console.log("---",parameter);
-      	var body = Object.assign(parameter, this.queryParam)
+        console.log("---", parameter);
+        var body = Object.assign(parameter, this.queryParam);
         return this.$http
-          .post(`http://127.0.0.1:8888/controller/v1/«record.name»/page?pageNo=${parameter.pageNo}&pageSize=${parameter.pageSize}`, body)
+          .post(
+            this.$store.state.app.approot + "/controller/v1/«record.name»/page",
+            body,
+            { params: parameter }
+          )
           .then(res => {
             console.log("-------------", res);
             return res.data;
@@ -338,7 +378,7 @@ export default {
 «FOR f : fields»
   «IF f.keyType == "M21"|| f.keyType =="121"»
     this.$http
-          .get("http://127.0.0.1:8888/controller/v1/«f.name»/", {})
+          .get(this.$store.state.app.approot + "/controller/v1/«f.name»/", {})
           .then(res => {
             console.log("-------------«f.name»s", res.data);
             this.«f.name»s = res.data;
@@ -348,11 +388,11 @@ export default {
   },
   methods: {
     handleCreate(e) {
-      this.mdl = {};
-      if (this.form) {
-        this.form.setFieldsValue(this.mdl);
-      }
       this.visible = true;
+      setTimeout(() => {
+          this.form.resetFields();
+      }, 50);
+      
     },
     handleEdit(record) {
       this.mdl = Object.assign({}, record);
@@ -361,11 +401,11 @@ export default {
       delete this.mdl.«f.name»
       «ENDIF»
       «ENDFOR»
-      if (this.form) {
-        this.form.setFieldsValue(this.mdl);
-      }
       console.log("modal",this.mdl);
       this.visible = true;
+      setTimeout(() => {
+          this.form.setFieldsValue(this.mdl);
+      }, 50);
     },
     handleDelete(record) {
       console.log(record);
@@ -380,7 +420,7 @@ export default {
           console.log("开始删除");
           that.$http
             .delete(
-              "http://localhost:8888/controller/v1/«record.name»/" + record.id
+              this.$store.state.app.approot + "/controller/v1/«record.name»/" + record.id
             )
             .then(res => {
               console.log(`已删除id为${record.id}的设备`);
@@ -401,7 +441,7 @@ export default {
         if (!err) {
           console.log("Received values of form: ", values);
           this.$http
-            .post("http://localhost:8888/controller/v1/«record.name»/", values)
+            .post(this.$store.state.app.approot + "/controller/v1/«record.name»/", values)
             .then(res => {
               console.log(`已添加设备${values.name}`);
               this.$refs.table.refresh();
@@ -434,7 +474,7 @@ export default {
           console.log("开始删除");
           that.$http
             .post(
-              "http://127.0.0.1:8888/controller/v1/«record.name»/deletes",
+              this.$store.state.app.approot + "/controller/v1/«record.name»/deletes",
               that.selectedRowKeys
             )
             .then(res => {

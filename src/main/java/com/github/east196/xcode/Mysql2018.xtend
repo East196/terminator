@@ -67,7 +67,9 @@ import javax.persistence.OneToOne;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
 import org.springframework.data.annotation.Transient;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 «FOR f : fields»
 «IF f.getKeyType=="M21"»
@@ -81,8 +83,10 @@ import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
 «ENDIF»
 «ENDFOR»
 import lombok.Data;
+import lombok.ToString;
 
 @Data
+@ToString(exclude={«FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»",«ENDIF»«ENDFOR»}) 
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"hibernateLazyInitializer", "handler", "fieldHandler"})
 public class «klassType» {
@@ -107,9 +111,18 @@ public class «klassType» {
 	«ELSEIF f.getKeyType=="121"»
 	@OneToOne(fetch=FetchType.EAGER)
 	private «f.javaType» «f.name.toFirstLower»;
+	«ELSEIF f.type=="date"»
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
+    @JsonFormat(pattern="yyyy-MM-dd",timezone = "GMT+8")
+	private «f.javaType» «f.name.toFirstLower»;
+	«ELSEIF f.type=="datetime"»
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+	private «f.javaType» «f.name.toFirstLower»;
 	«ELSE»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ENDIF»
+	
 	«ENDFOR»
 
 }
