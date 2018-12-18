@@ -173,6 +173,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.DataBinder;
@@ -215,7 +217,7 @@ public class «klassType» {
 	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
 	@RequestBody Map<String, String> queryMap) {
 		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
-		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize);
+		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize,Sort.by(Order.desc("id")));
     	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
 		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
 		TableResult<List<«beanType»>> tableResult = new TableResult<List<«beanType»>>();
