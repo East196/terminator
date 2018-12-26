@@ -420,7 +420,7 @@ export default {
           console.log("开始删除");
           that.$http
             .delete(
-              this.$store.state.app.approot + "/controller/v1/«record.name»/" + record.id
+              that.$store.state.app.approot + "/controller/v1/«record.name»/" + record.id
             )
             .then(res => {
               console.log(`已删除id为${record.id}的设备`);
