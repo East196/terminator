@@ -66,6 +66,8 @@ import javax.persistence.OneToOne;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
+import org.hibernate.annotations.NotFound;
+import org.hibernate.annotations.NotFoundAction;
 import org.springframework.data.annotation.Transient;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -102,14 +104,17 @@ public class «klassType» {
 	«ELSEIF f.getKeyType=="M21"»
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»s"})
 	@ManyToOne(fetch=FetchType.EAGER,optional=false)
+	@NotFound(action= NotFoundAction.IGNORE)
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="12M"»
 	@Transient
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»"})
 	@OneToMany(fetch=FetchType.LAZY,mappedBy="«beanName»",orphanRemoval=false)
+	@NotFound(action= NotFoundAction.IGNORE)
 	private List<«f.javaType»> «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="121"»
 	@OneToOne(fetch=FetchType.EAGER)
+	@NotFound(action= NotFoundAction.IGNORE)
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.type=="date"»
     @DateTimeFormat(pattern = "yyyy-MM-dd")
