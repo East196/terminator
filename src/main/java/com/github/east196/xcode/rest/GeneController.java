@@ -5,8 +5,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.east196.xcode.model.Three;
-import com.github.east196.xcode.AntDVue2018;
-import com.github.east196.xcode.Mysql2018;
 import com.github.east196.xcode.model.GeneResult;
 
 @RestController

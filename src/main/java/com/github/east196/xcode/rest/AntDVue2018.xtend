@@ -1,4 +1,4 @@
-package com.github.east196.xcode
+package com.github.east196.xcode.rest
 
 import com.github.east196.xcode.meta.DocMetaParser
 import com.github.east196.xcode.model.Field
