@@ -1,48 +1,72 @@
 package com.github.east196.xcode
 
-import com.github.east196.xcode.bot.Bots
 import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
+import com.github.east196.xcode.Base.Three
+import com.github.east196.xcode.model.GeneResult
 
 class Mysql2018 {
 
 	def static void main(String[] args) {
 		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
-			gene(three.project, three.record, three.fields)
+			geneAll(three)
 		]
 	}
 
-
-	def static gene(Project project, Record record, List<Field> fields) {
-
-		val javaPath = project.root.split("\\.").join("\\")
-		var packageName = record.name.toFirstLower
-
-		var content = bean(project, record, fields)
-		var path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
-		println(path)
-		Bots.copy(content, path)
-
-		content = dao(project, record, fields)
-		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
-		println(path)
-		Bots.copy(content, path)
-
-		content = controller(project, record, fields)
-		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
-		println(path)
-		Bots.copy(content, path)
-
-		content = validator(project, record, fields)
-		path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
-		println(path)
-		Bots.copy(content, path)
-
+	def static geneAll(Three three) {
+		gene(three, "entity").copy
+		gene(three, "dao").copy
+		gene(three, "controller").copy
+		gene(three, "restcli").copy
+		gene(three, "validator").copy
 	}
 
-	def static bean(Project project, Record record, List<Field> fields) {
+	def static gene(Three three, String type) {
+		var Project project = three.project
+		var Record record = three.record
+		var List<Field> fields = three.fields
+		val javaPath = project.root.split("\\.").join("\\")
+		var packageName = record.name.toFirstLower
+		var CharSequence content = ""
+		var CharSequence path = ""
+		switch type {
+			case "entity": {
+				content = entity(project, record, fields);
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
+			}
+			case "dao": {
+				content = dao(project, record,
+					fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
+
+			}
+			case "controller": {
+				content = controller(project, record,
+					fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
+
+			}
+			case "restcli": {
+				content = restcli(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Cli.java'''
+
+			}
+			case "validator": {
+				content = validator(project, record,
+					fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
+			}
+			default: {
+				content = entity(three.project, three.record, three.fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
+			}
+		}
+		return new GeneResult(content, path)
+	}
+
+	def static entity(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
 		var packageName = record.name.toFirstLower
@@ -88,7 +112,7 @@ import lombok.Data;
 import lombok.ToString;
 
 @Data
-@ToString(exclude={«FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»",«ENDIF»«ENDFOR»}) 
+@ToString(exclude={«FOR f : fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»",«ENDIF»«ENDFOR»}) 
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"hibernateLazyInitializer", "handler", "fieldHandler"})
 public class «klassType» {
@@ -159,7 +183,7 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 
 	def static controller(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
-		val commonPackageName = project.root.split("\\.").subList(0,project.root.split("\\.").length-1).join(".")
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var klassType = record.name.toFirstUpper + "Controller"
@@ -252,7 +276,7 @@ public class «klassType» {
 	
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-	public Response delete(@PathVariable String id) {
+	public Response delete(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
 		«daoType.toFirstLower».deleteById(id);
 		return new Response("0", "ok");
@@ -276,7 +300,57 @@ public class «klassType» {
 	}
 }
 		'''
-	}//TODO PUT 方法合并对象 
+	} // TODO PUT 方法合并对象 
+
+	def static restcli(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
+		var beanType = record.name.toFirstUpper
+		var klassType = record.name.toFirstUpper + "Cli"
+		var packageName = record.name.toFirstLower
+		'''
+package «basePackageName».«packageName»;
+
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import «commonPackageName».common.vo.DataResponse;
+import «commonPackageName».common.vo.Response;
+import «commonPackageName».common.vo.TableResult;
+
+
+@FeignClient(url = "${feign.restcli.request.url}/controller/v1/«beanType.toFirstLower»", name = "«beanType.toFirstLower»Cli")
+public interface «klassType» {
+
+	@RequestMapping(value = "/", method = RequestMethod.GET)
+	public DataResponse<List<«beanType»>> all();
+	
+	@RequestMapping(value = "/page", method = RequestMethod.POST)
+	public DataResponse<TableResult<List<«beanType»>>> page(
+	@RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
+	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
+	@RequestBody Map<String, String> queryMap);
+	
+
+	@RequestMapping(value = "/", method = RequestMethod.POST)
+	public Response createOrUpdate(@RequestBody «beanType» «beanType.toFirstLower»);
+
+	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
+	public Response delete(@PathVariable("id") String id);
+
+	@RequestMapping(value = "/deletes", method = RequestMethod.POST)
+	public Response «beanType.toFirstLower»Deletes(@RequestBody List<String> ids);
+
+}
+		'''
+	} // TODO PUT 方法合并对象 
 
 	def static validator(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
