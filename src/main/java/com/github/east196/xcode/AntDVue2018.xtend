@@ -6,11 +6,12 @@ import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
 import org.boon.Lists
+import com.github.east196.xcode.meta.DocMetaParser
 
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 		]
 	}

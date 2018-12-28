@@ -1,10 +1,11 @@
-package com.github.east196.xcode;
+package com.github.east196.xcode.rest;
 
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github.east196.xcode.Base.Three;
+import com.github.east196.xcode.model.Three;
+import com.github.east196.xcode.Mysql2018;
 import com.github.east196.xcode.model.GeneResult;
 
 @RestController

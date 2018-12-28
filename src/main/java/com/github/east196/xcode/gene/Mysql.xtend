@@ -1,15 +1,16 @@
-package com.github.east196.xcode
+package com.github.east196.xcode.gene
 
 import com.github.east196.xcode.bot.Bots
 import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
+import com.github.east196.xcode.meta.DocMetaParser
 
-class Mongo {
+class Mysql {
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20180913.doc''').forEach [ three |
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20181206.doc''').forEach [ three |
 			gene(three.project, three.record, three.fields)
 			Base.app(three.project)
 		]
@@ -64,16 +65,27 @@ class Mongo {
 		'''
 package «basePackageName».«packageName»;
 
-import com.google.common.base.Objects;
-import org.springframework.data.annotation.Id;
+import org.eclipse.xtend.lib.annotations.Accessors;
+import org.eclipse.xtend.lib.annotations.EqualsHashCode;
+import org.eclipse.xtend.lib.annotations.ToString;
 
-«IF fields.exists[f|f.type.equals("repeated")]»
 import java.util.List;
-«ENDIF»
-«IF fields.exists[f|f.type.equals("datetime")]»
 import java.util.Date;
-«ENDIF»
 
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+
+import javax.validation.constraints.NotEmpty;
+
+import com.google.common.base.Objects;
+
+
+@Accessors
+@EqualsHashCode
+@ToString(singleLine=true)
+@Entity
 public class «klassType» {
 
 	«FOR f : fields»

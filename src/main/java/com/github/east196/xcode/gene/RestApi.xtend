@@ -1,15 +1,16 @@
-package com.github.east196.xcode
+package com.github.east196.xcode.gene
 
 import com.github.east196.xcode.bot.Bots
 import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
+import com.github.east196.xcode.meta.DocMetaParser
 
 class RestApi { // bean repo feign
 
 	def static void main(String[] args) {
-		Base.init('''E:\backup\xcode\统一数据文档20180913.doc''').forEach[three|
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20180913.doc''').forEach[three|
 			gene(three.project,three.record,three.fields)
 			Base.app(three.project)
 		]

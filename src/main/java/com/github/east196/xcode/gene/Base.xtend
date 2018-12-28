@@ -1,11 +1,10 @@
-package com.github.east196.xcode
+package com.github.east196.xcode.gene
 
+import com.github.east196.xcode.bot.Bots
 import com.github.east196.xcode.model.Field
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import java.util.List
-import org.eclipse.xtend.lib.annotations.Data
-import com.github.east196.xcode.bot.Bots
 
 class Base {
 
@@ -101,87 +100,8 @@ public class «klassType» {
 		'''
 	}
 
-	@Data
-	static class Three {
-		Project project
-		Record record
-		List<Field> fields
-	}
 
-	def static parse(String info) {
-		val project = new Project
-		val klass = info.split('/').get(0)
-		val record = new Record
-		record.name = klass
-		val fields = info.split('/').get(1).split(' ').filter[!it.nullOrEmpty].map [ fieldInfo |
-			val fieldInfos = fieldInfo.split(":")
-			var field = new Field
-			field.name = fieldInfos.get(0)
-			if (fieldInfos.length == 2) {
-				field.type = fieldInfos.get(1)
-			} else {
-				field.type = "string"
-			}
-			if (fieldInfos.length == 3) {
-				field.label = fieldInfos.get(2)
-			} else {
-				field.label = ""
-			}
-			return field
-		].toList
-		new Three(project, record, fields)
-	}
 
-	def static init(String docx) {
-		val tables = Bots.tables(docx)
-		val projectTable = tables.get(0)
-		val projectRow = projectTable.getRow(3)
-		var project = new Project
-		project.version = projectRow.getCell(0).text.trim
-		project.name = projectRow.getCell(1).text.trim
-		project.label = projectRow.getCell(2).text.trim
-		project.path = projectRow.getCell(3).text.trim
-		project.root = projectRow.getCell(4).text.trim
-		project.port = projectRow.getCell(5).text.trim
-		
-		val webRow = projectTable.getRow(4)
-		project.webPath = webRow.getCell(3).text.trim
-		project.webRoot = webRow.getCell(4).text.trim
-		
-		println(project)
 
-		val threes = newArrayList()
-		for (var i = 1; i < tables.size; i++) {
-			var table = tables.get(i)
-			var record = new Record
-			val recordRow = table.getRow(3)
-			record.projectId = project.id
-			record.dbType = recordRow.getCell(0).text.trim
-			record.name = recordRow.getCell(1).text.trim
-			record.label = recordRow.getCell(2).text.trim
-			record.doc = recordRow.getCell(3).text.trim
-			println(record)
-			val fields = newArrayList()
-			for (var rowIndex = 6; rowIndex < table.numRows; rowIndex++) {
-				var fieldRow = table.getRow(rowIndex)
-				var field = new Field
-				field.projectId = project.id
-				field.recordId = record.id
-				field.type = fieldRow.getCell(0).text.trim
-				field.name = fieldRow.getCell(1).text.trim
-				field.label = fieldRow.getCell(2).text.trim
-				field.doc = fieldRow.getCell(3).text.trim
-				field.required = fieldRow.getCell(4).text.trim
-				field.keyType = fieldRow.getCell(5).text.trim
-				field.sortIndex = fieldRow.getCell(6).text.trim
-				field.show = fieldRow.getCell(7).text.trim
-				println(field)
-				fields.add(field)
-			}
-			val three = new Three(project, record, fields)
-			threes.add(three)
-		}
-		threes
-	}
 
 }
