@@ -50,6 +50,7 @@ class Field {
 			case "long": "Long"
 			case "double": "Double"
 			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper
+			case "object" : name.toFirstUpper
 			default: type.toFirstUpper
 		}
 	}

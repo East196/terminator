@@ -21,4 +21,6 @@ class Record {
 	String tableName
 	
 	String geneOk
+	String method
+	String url
 }
