@@ -36,11 +36,11 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-rest</artifactId>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-mongodb</artifactId>
@@ -49,6 +49,7 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
 		</dependency>
+		
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
@@ -69,32 +70,22 @@
 			<artifactId>org.eclipse.xtend.lib</artifactId>
 			<version>2.10.0</version>
 		</dependency>
-
-
 		<dependency>
 			<groupId>com.squareup.retrofit</groupId>
 			<artifactId>retrofit</artifactId>
 			<version>1.9.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi-examples</artifactId>
 			<version>3.17</version>
 		</dependency>
-
 		<dependency>
 			<groupId>io.fastjson</groupId>
 			<artifactId>boon</artifactId>
 			<version>0.34</version>
 		</dependency>
 
-
-		<dependency>
-			<groupId>io.springside</groupId>
-			<artifactId>springside-utils</artifactId>
-			<version>5.0.0-RC1</version>
-		</dependency>
 	</dependencies>
 
 	<repositories>

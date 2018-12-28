@@ -11,9 +11,11 @@ import com.github.east196.xcode.meta.DocMetaParser
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
-			geneAll(three)
-		]
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档 Plus.doc''').filter[three|three.record.geneOk.trim == ""].
+			forEach [ three |
+				println(111)
+				geneAll(three)
+			]
 	}
 
 	def static geneAll(Three three) {
@@ -93,6 +95,9 @@ import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NotFound;
 import org.hibernate.annotations.NotFoundAction;
+
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Transient;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -144,10 +149,14 @@ public class «klassType» {
 	«ELSEIF f.type=="date"»
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern="yyyy-MM-dd",timezone = "GMT+8")
+    «IF f.name.contains("createTime")»@CreatedDate«ENDIF»
+    «IF f.name.contains("modifyTime")»@LastModifiedDate«ENDIF»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.type=="datetime"»
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    «IF f.name.contains("createTime")»@CreatedDate«ENDIF»
+    «IF f.name.contains("modifyTime")»@LastModifiedDate«ENDIF»
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSE»
 	private «f.javaType» «f.name.toFirstLower»;
@@ -247,6 +256,7 @@ public class «klassType» {
 	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
 	@RequestBody Map<String, String> queryMap) {
 		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
+		searchFilters.add(new SearchFilter("enable", SearchFilter.Operator.EQ,true));
 		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize,Sort.by(Order.desc("id")));
     	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
 		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);

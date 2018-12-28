@@ -19,4 +19,6 @@ class Record {
 	String dbType
 	String dbName
 	String tableName
+	
+	String geneOk
 }

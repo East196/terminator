@@ -13,6 +13,7 @@ class DocMetaParser implements MetaParser {
 	override action(String docx) {
 		val tables = tables(docx)
 		val projectTable = tables.get(0)
+		
 		val projectRow = projectTable.getRow(3)
 		var project = new Project
 		project.version = projectRow.getCell(0).text.trim
@@ -32,6 +33,9 @@ class DocMetaParser implements MetaParser {
 		for (var i = 1; i < tables.size; i++) {
 			var table = tables.get(i)
 			var record = new Record
+			val recordOkRow = table.getRow(0)
+			record.geneOk = recordOkRow.getCell(1).text.trim			
+			
 			val recordRow = table.getRow(3)
 			record.projectId = project.id
 			record.dbType = recordRow.getCell(0).text.trim
