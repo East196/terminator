@@ -1,44 +1,53 @@
 package com.github.east196.xcode
 
-import com.github.east196.xcode.bot.Bots
+import com.github.east196.xcode.meta.DocMetaParser
 import com.github.east196.xcode.model.Field
+import com.github.east196.xcode.model.GeneResult
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
+import com.github.east196.xcode.model.Three
 import java.util.List
 import org.boon.Lists
-import com.github.east196.xcode.meta.DocMetaParser
 
 class AntDVue2018 {
 
 	def static void main(String[] args) {
 		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
-			gene(three.project, three.record, three.fields)
+			geneAll(three)
 		]
 	}
 
-	def static gene(Project project, Record record, List<Field> fields) {
-
-		val webPath = project.webPath
-		
-		var CharSequence content=''''''
-		var path=""
-		
-
-		content = recordlist(project, record, fields)
-		path = '''«webPath»\src\views\device\«record.name.toFirstUpper»List.vue'''
-		println(path)
-		Bots.copy(content, path)
-		
-		content = recordsearch(project, record, fields)
-		path = '''«webPath»\src\views\device\«record.name.toFirstUpper»Search.vue'''
-		println(path)
-		Bots.copy(content, path)
-
+	def static geneAll(Three three) {
+		gene(three, "list").copy
+		gene(three, "search").copy
 	}
+
+	def static gene(Three three, String type) {
+		var Project project = three.project
+		var Record record = three.record
+		var List<Field> fields = three.fields
+		val webPath = project.webPath
+		var CharSequence content = ''''''
+		var path = ""
+		switch type {
+			case "list": {
+				content = recordlist(project, record, fields)
+				path = '''«webPath»\src\views\device\«record.name.toFirstUpper»List.vue'''
+			}
+			case "search": {
+				content = recordsearch(project, record, fields)
+				path = '''«webPath»\src\views\device\«record.name.toFirstUpper»Search.vue'''
+			}
+			default: {
+			}
+		}
+		return new GeneResult(content, path)
+	}
+
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
-		val sfas = Lists.slcEnd(searchFields,2)
-		val sfbs = Lists.slc(searchFields,2)
+		val sfas = Lists.slcEnd(searchFields, 2)
+		val sfbs = Lists.slc(searchFields, 2)
 		'''
 <template>
   <div class="table-page-search-wrapper">
@@ -127,7 +136,7 @@ class AntDVue2018 {
 export default {
   name: "«record.name.toFirstUpper»Search",
   components: {},
-  props:[«FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»s",«ENDIF»«ENDFOR»],
+  props:[«FOR f : fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»s",«ENDIF»«ENDFOR»],
   data() {
     return {
       // 高级搜索 展开/关闭
@@ -162,11 +171,12 @@ export default {
 		'''
 	}
 
-	def static recordlist(Project project, Record record, List<Field> fields) {
+	def static recordlist(Project project, Record record,
+		List<Field> fields) {
 		'''
 <template>
   <a-card title="«record.label»列表" :bordered="false">
-    <«record.name.toFirstUpper»Search «FOR f:fields»«IF f.keyType=="M21"|| f.keyType =="121"»:«f.name»s="«f.name»s" «ENDIF»«ENDFOR» @«record.name»SearchForm="handleSearchForm" />
+    <«record.name.toFirstUpper»Search «FOR f : fields»«IF f.keyType=="M21"|| f.keyType =="121"»:«f.name»s="«f.name»s" «ENDIF»«ENDFOR» @«record.name»SearchForm="handleSearchForm" />
 
     <div class="table-operator">
       <a-button type="primary" icon="plus" @click="handleCreate">新建</a-button>
