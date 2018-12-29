@@ -1,14 +1,14 @@
 package com.github.east196.xcode.rest
 
+import com.github.east196.xcode.bot.Bots
+
+import com.github.east196.xcode.model.Field
+import com.github.east196.xcode.model.Project
+import com.github.east196.xcode.model.Record
+import com.github.east196.xcode.model.Three
 import java.util.List
 import org.apache.poi.hwpf.usermodel.Table
 import org.eclipse.xtend.lib.annotations.Data
-import com.github.east196.xcode.bot.Bots
-import com.github.east196.xcode.model.Field
-import com.github.east196.xcode.model.Record
-import com.github.east196.xcode.model.Project
-import com.github.east196.xcode.model.Three
-import com.github.east196.xcode.gene.Base
 
 class Api2018 {
 	val static projectPath = '''E:\workspace\github\east196\java\xcode'''
@@ -54,40 +54,55 @@ class Api2018 {
 			var Project project = three.project
 			var Record record = three.record
 			var List<Field> fields = three.fields
-			var content = Base.bean(project, record, fields)
+			var content = bean(project, record, fields)
 			println(content)
 		]
-		
-		datatables.forEach [ table |
+
+		resttables.forEach [ table |
 			val rest = table2rest(table)
 			var Three headers = rest.headers
 			var Three params = rest.params
 			var Three reqBody = rest.reqBody
 			var Three respBody = rest.respBody
-			
-			var Project project = respBody.project
-			var Record record = respBody.record
-			var List<Field> fields = respBody.fields
-			var content = Base.bean(project, record, fields)
-			println(content)
 
+			println(threeContent(headers))
+			println(threeContent(params))
+			println(threeContent(reqBody))
+			println(threeContent(respBody))
 		]
 
 	}
+	
+	protected def static CharSequence threeContent(Three three) {
+		var Project project = three.project
+		var Record record = three.record
+		var List<Field> fields = three.fields
+		if (fields.size ==0){
+			return ''''''
+		}
+		var content = bean(project, record, fields)
+		content
+	}
 
 	def static table2rest(Table table) {
+
+		var Three headers = threeFrom(table, "Headers")
+		var Three params = threeFrom(table, "Params")
+		var Three reqBody = threeFrom(table, "ReqBody")
+		var Three respBody = threeFrom(table, "RespBody")
+
+		new HttpReqResp(headers, params, reqBody, respBody)
+	}
+
+	def static Three threeFrom(Table table, String type) {
 		var Project project = new Project
-		project.path = basePath
-		project.root = basePackageName
+		project.path = basePath + "/http"
+		project.root = basePackageName + ".http"
 
 		var Record record = recordFrom(table)
-
-		var Three headers = new Three(project, record, fieldsFrom(table, "请求头"))
-		var Three params = new Three(project, record, fieldsFrom(table, "请求参数"))
-		var Three reqBody = new Three(project, record, fieldsFrom(table, "请求体"))
-		var Three respBody = new Three(project, record, fieldsFrom(table, "响应体"))
+		record.name = record.name + type.toFirstUpper
 		
-		new HttpReqResp(headers,params,reqBody,respBody)
+		new Three(project, record, fieldsFrom(table, type))
 	}
 
 	def static recordFrom(Table resttable) {
@@ -104,7 +119,8 @@ class Api2018 {
 		var List<Field> fields = newArrayList()
 		for (var j = 3; j < resttable.numRows; j++) {
 			var row = resttable.getRow(j)
-			if (row.getCell(0).text.trim.equalsIgnoreCase(type)) {
+			var rowType = row.getCell(0).text.trim
+			if (rowType.equalsIgnoreCase(type)&&!row.getCell(1).text.trim.nullOrEmpty) {
 				var field = new Field()
 				field.name = row.getCell(1).text.trim
 				field.type = row.getCell(2).text.trim
@@ -114,6 +130,30 @@ class Api2018 {
 			}
 		}
 		fields
+	}
+	
+	
+		def static bean(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		var klassType = record.name.toFirstUpper
+		'''
+package «basePackageName»;
+
+import java.util.List;
+import java.util.Date;
+
+import lombok.Data;
+
+@Data
+public class «klassType» {
+
+	«FOR f : fields»
+	/**«f.doc»**/
+	private «f.javaType» «f.name.toFirstLower»;	
+	«ENDFOR»
+
+}
+		'''
 	}
 
 	@Data

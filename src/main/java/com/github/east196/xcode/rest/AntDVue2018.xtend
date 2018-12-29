@@ -7,7 +7,6 @@ import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import com.github.east196.xcode.model.Three
 import java.util.List
-import org.boon.Lists
 
 class AntDVue2018 {
 
@@ -46,8 +45,9 @@ class AntDVue2018 {
 
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
-		val sfas = Lists.slcEnd(searchFields, 2)
-		val sfbs = Lists.slc(searchFields, 2)
+		
+		val sfas = searchFields.subList(0,2)
+		val sfbs = searchFields.subList(2,searchFields.size())
 		'''
 <template>
   <div class="table-page-search-wrapper">

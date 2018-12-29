@@ -1,16 +1,15 @@
 package com.github.east196.xcode.model
 
+import com.google.common.base.CaseFormat
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.annotations.EqualsHashCode
 import org.eclipse.xtend.lib.annotations.ToString
-import org.springframework.data.annotation.Id
-import com.google.common.base.CaseFormat
 
 @Accessors
 @EqualsHashCode
 @ToString(singleLine=true)
 class Field {
-	@Id
+
 	String id // ID
 	String name // 名称
 	String label
@@ -42,11 +41,13 @@ class Field {
 
 	def String javaType() {
 		switch (type.toFirstLower) {
-			case "bigint": "long"
+			case "bool": "Boolean"
+			case "boolean": "Boolean"
 			case "varchar": "String"
 			case "datetime": "Date"
 			case "date": "Date"
 			case "int": "Integer"
+			case "bigint": "long"
 			case "long": "Long"
 			case "double": "Double"
 			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper

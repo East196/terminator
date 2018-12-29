@@ -3,7 +3,6 @@ package com.github.east196.xcode.model
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.annotations.EqualsHashCode
 import org.eclipse.xtend.lib.annotations.ToString
-import org.springframework.data.annotation.Id
 
 @Accessors
 @EqualsHashCode
@@ -11,7 +10,6 @@ import org.springframework.data.annotation.Id
 class Code {//枚举类型
 
 	///// 原始六大件
-	@Id
 	String id             			//ID
 	String name						//名称
 	String label
