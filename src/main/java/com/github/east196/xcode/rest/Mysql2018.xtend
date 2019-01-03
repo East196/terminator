@@ -7,15 +7,17 @@ import java.util.List
 import com.github.east196.xcode.model.Three
 import com.github.east196.xcode.model.GeneResult
 import com.github.east196.xcode.meta.DocMetaParser
+import com.google.common.base.CaseFormat
 
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档 Plus.doc''').filter[three|three.record.geneOk.trim == ""].
-			forEach [ three |
-				println(111)
-				geneAll(three)
-			]
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20190103.doc''').filter [three|
+			three.record.geneOk.trim == ""
+		].forEach [ three |
+			println(111)
+			geneAll(three)
+		]
 	}
 
 	def static geneAll(Three three) {
@@ -90,6 +92,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.EntityListeners;
 
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
@@ -98,10 +101,11 @@ import org.hibernate.annotations.NotFoundAction;
 
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
+
 import org.springframework.data.annotation.Transient;
 import org.springframework.format.annotation.DateTimeFormat;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 «FOR f : fields»
 «IF f.getKeyType=="M21"»
@@ -121,6 +125,7 @@ import lombok.ToString;
 @ToString(exclude={«FOR f : fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»",«ENDIF»«ENDFOR»}) 
 @Entity
 @JsonIgnoreProperties(ignoreUnknown = true, value = {"hibernateLazyInitializer", "handler", "fieldHandler"})
+@EntityListeners(AuditingEntityListener.class)
 public class «klassType» {
 
 	«FOR f : fields»
@@ -173,11 +178,16 @@ public class «klassType» {
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var packageName = record.name.toFirstLower
+		var tableName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, record.name)
 		'''
 package «basePackageName».«packageName»;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+
+import javax.transaction.Transactional;
 
 public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpecificationExecutor<«beanType»>{
 	
@@ -186,6 +196,11 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 	public «beanType» findBy«f.name.toFirstUpper»(«f.javaType» «f.name»);
 	«ENDIF»
 	«ENDFOR»
+	
+	@Transactional
+	@Modifying
+	@Query(value = "update «tableName» set enable = 0 where id = ?1",nativeQuery = true)
+	public void updateEnableStatus(String id);
 	// add more ...
 }
 		'''
@@ -278,10 +293,10 @@ public class «klassType» {
 			for (ObjectError msg : result.getAllErrors())
 				sb.append(msg.getDefaultMessage()).append(" ");
 			return new Response("-1", sb.toString());
-		} else {
-			«daoType.toFirstLower».save(«beanType.toFirstLower»);
-		    return new Response("0", "ok");
 		}
+		«beanType.toFirstLower».setEnable(true);
+		«daoType.toFirstLower».save(«beanType.toFirstLower»);
+	    return new Response("0", "ok");
 	}
 	
 	
@@ -289,7 +304,7 @@ public class «klassType» {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
-		«daoType.toFirstLower».deleteById(id);
+		«daoType.toFirstLower».updateEnableStatus(id);
 		return new Response("0", "ok");
 	}
 	
@@ -300,7 +315,7 @@ public class «klassType» {
 	public Response «beanType.toFirstLower»Deletes(@RequestBody List<String> ids) {
 		LOGGER.debug("ids:  {}", ids);
 		for (String id : ids) {
-			«daoType.toFirstLower».deleteById(id);
+			«daoType.toFirstLower».updateEnableStatus(id);
 		}
 		return new Response("0", "ok");
 	}

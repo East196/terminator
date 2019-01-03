@@ -11,7 +11,9 @@ import java.util.List
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20181209.doc''').forEach [ three |
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20190103.doc''').filter [three|
+			three.record.geneOk.trim == ""
+		].forEach [ three |
 			geneAll(three)
 		]
 	}
@@ -45,9 +47,9 @@ class AntDVue2018 {
 
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
-		
-		val sfas = searchFields.subList(0,2)
-		val sfbs = searchFields.subList(2,searchFields.size())
+
+		val sfas = searchFields.subList(0, 2)
+		val sfbs = searchFields.subList(2, searchFields.size())
 		'''
 <template>
   <div class="table-page-search-wrapper">
@@ -420,7 +422,7 @@ export default {
     },
     handleDelete(record) {
       console.log(record);
-      var that = this;
+      let that = this;
       const deleteModal = this.$confirm({
         title: "确认",
         content: `确认删除选中的 ${record.name}？`,
@@ -474,7 +476,7 @@ export default {
     },
     handleBatchDelete(e) {
       console.log(this.selectedRowKeys);
-      var that = this;
+      let that = this;
       const deleteModal = this.$confirm({
         title: "确认",
         content: `确认删除选中的${this.selectedRowKeys.length}个«record.label»？`,
@@ -485,7 +487,7 @@ export default {
           console.log("开始删除");
           that.$http
             .post(
-              this.$store.state.app.approot + "/controller/v1/«record.name»/deletes",
+              that.$store.state.app.approot + "/controller/v1/«record.name»/deletes",
               that.selectedRowKeys
             )
             .then(res => {
@@ -512,18 +514,9 @@ export default {
     }
   },
   watch: {
-    /*
-      'selectedRows': function (selectedRows) {
-        this.needTotalList = this.needTotalList.map(item => {
-          return {
-            ...item,
-            total: selectedRows.reduce( (sum, val) => {
-              return sum + val[item.dataIndex]
-            }, 0)
-          }
-        })
-      }
-      */
+　　'$route': function (to, from) {
+        this.$refs.table.refresh();
+　　}
   }
 };
 </script>
