@@ -12,7 +12,7 @@ import com.google.common.base.CaseFormat
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20190103.doc''').filter [three|
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			println(111)
@@ -29,6 +29,7 @@ class Mysql2018 {
 	}
 
 	def static gene(Three three, String type) {
+
 		var Project project = three.project
 		var Record record = three.record
 		var List<Field> fields = three.fields
@@ -182,12 +183,14 @@ public class «klassType» {
 		'''
 package «basePackageName».«packageName»;
 
+import java.util.List;
+
+import javax.transaction.Transactional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-
-import javax.transaction.Transactional;
 
 public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpecificationExecutor<«beanType»>{
 	
@@ -201,6 +204,12 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 	@Modifying
 	@Query(value = "update «tableName» set enable = 0 where id = ?1",nativeQuery = true)
 	public void updateEnableStatus(String id);
+	
+	
+	@Transactional
+	@Modifying
+	@Query(value = "update «tableName» set enable = 0 where id in (:ids)",nativeQuery = true)
+	public void updateEnableStatusBacth(List<String> ids);
 	// add more ...
 }
 		'''
@@ -208,11 +217,12 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 
 	def static controller(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
-		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var klassType = record.name.toFirstUpper + "Controller"
-		var packageName = record.name.toFirstLower
+		var packageName = record.name.
+			toFirstLower
 		'''
 package «basePackageName».«packageName»;
 
@@ -221,6 +231,11 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -247,6 +262,7 @@ import «commonPackageName».common.vo.DataResponse;
 import «commonPackageName».common.vo.Response;
 import «commonPackageName».common.vo.TableResult;
 
+@Api("«record.label»管理接口")
 @RestController
 @RequestMapping("/controller/v1/«beanType.toFirstLower»")
 public class «klassType» {
@@ -255,9 +271,10 @@ public class «klassType» {
 
 	@Autowired
 	private «daoType» «daoType.toFirstLower»;
-
+	
+	@ApiOperation(value = "查询«record.label»信息")
 	@RequestMapping(value = "/", method = RequestMethod.GET)
-	public DataResponse<List<«beanType»>> all(HttpServletRequest request) {
+	public DataResponse<List<«beanType»>> search(HttpServletRequest request) {
 		Map<String, String[]> requestParameterMap = request.getParameterMap();
 		List<SearchFilter> searchFilters = SearchFilter.from(requestParameterMap, «klassType».class);
 		Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
@@ -265,6 +282,12 @@ public class «klassType» {
 		return new DataResponse<List<«beanType»>>("0", "查询成功!", «beanType.toFirstLower»s);
 	}
 	
+	@ApiOperation(value = "分页查询«record.label»")
+	@ApiImplicitParams({
+			@ApiImplicitParam(name = "pageNo",value = "页码",paramType ="query",required = false,dataType = "Integer",defaultValue = "1"),
+			@ApiImplicitParam(name = "pageSize",value = "每页显示条数",paramType ="query",required = false,dataType = "Integer",defaultValue = "20"),
+			@ApiImplicitParam(name = "queryMap",value = "查询条件",paramType ="body",required = false,dataType = "Map")
+	})
 	@RequestMapping(value = "/page", method = RequestMethod.POST)
 	public DataResponse<TableResult<List<«beanType»>>> page(
 	@RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
@@ -284,7 +307,9 @@ public class «klassType» {
 		return new DataResponse<TableResult<List<«beanType»>>>("0", "查询成功!", tableResult);
 	}	
 	
-
+	
+	@ApiOperation(value = "新建/编辑 «record.label»信息")
+	@ApiImplicitParam(name = "«beanType.toFirstLower»",value = "«record.label»对象",required = true,paramType = "body",dataType = "«beanType»")
 	@RequestMapping(value = "/", method = RequestMethod.POST)
 	public Response createOrUpdate(@RequestBody @Valid «beanType» «beanType.toFirstLower», BindingResult result) {
 		LOGGER.debug("add «beanType.toFirstLower»:  {}", «beanType.toFirstLower»);
@@ -300,7 +325,8 @@ public class «klassType» {
 	}
 	
 	
-
+	@ApiOperation(value = "根据ID删除 «record.label»信息")
+	@ApiImplicitParam(name="id",value = " «record.label»ID",required = true,paramType = "path",dataType = "Integer")
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
@@ -310,7 +336,8 @@ public class «klassType» {
 	
 	
 
-
+	@ApiOperation(value = "根据ID批量删除«record.label»信息")
+	@ApiImplicitParam(name ="ids",value = "id集合",required = true,paramType = "body",dataType = "List")
 	@RequestMapping(value = "/deletes", method = RequestMethod.POST)
 	public Response «beanType.toFirstLower»Deletes(@RequestBody List<String> ids) {
 		LOGGER.debug("ids:  {}", ids);
@@ -330,7 +357,7 @@ public class «klassType» {
 
 	def static restcli(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
-		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
 		var beanType = record.name.toFirstUpper
 		var klassType = record.name.toFirstUpper + "Cli"
 		var packageName = record.name.toFirstLower

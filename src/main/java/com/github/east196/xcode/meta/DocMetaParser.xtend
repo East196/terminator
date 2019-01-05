@@ -46,6 +46,7 @@ class DocMetaParser implements MetaParser {
 			val fields = newArrayList()
 			for (var rowIndex = 6; rowIndex < table.numRows; rowIndex++) {
 				var fieldRow = table.getRow(rowIndex)
+				print(fieldRow)
 				var field = new Field
 				field.projectId = project.id
 				field.recordId = record.id

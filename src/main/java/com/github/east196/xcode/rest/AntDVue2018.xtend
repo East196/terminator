@@ -11,7 +11,7 @@ import java.util.List
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档20190103.doc''').filter [three|
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			geneAll(three)
@@ -28,16 +28,17 @@ class AntDVue2018 {
 		var Record record = three.record
 		var List<Field> fields = three.fields
 		val webPath = project.webPath
+		val webPackage = project.webRoot.split("\\.").join("\\")
 		var CharSequence content = ''''''
 		var path = ""
 		switch type {
 			case "list": {
 				content = recordlist(project, record, fields)
-				path = '''«webPath»\src\views\device\«record.name.toFirstUpper»List.vue'''
+				path = '''«webPath»\«webPackage»\«record.name.toFirstUpper»List.vue'''
 			}
 			case "search": {
 				content = recordsearch(project, record, fields)
-				path = '''«webPath»\src\views\device\«record.name.toFirstUpper»Search.vue'''
+				path = '''«webPath»\«webPackage»\«record.name.toFirstUpper»Search.vue'''
 			}
 			default: {
 			}
@@ -47,9 +48,13 @@ class AntDVue2018 {
 
 	def static recordsearch(Project project, Record record, List<Field> fields) {
 		val searchFields = fields.filter[it.show.contains("S")].toList
+		var sfas = searchFields
+		var List<Field> sfbs = newArrayList()
+		if (searchFields.size > 2) {
+			sfas = searchFields.subList(0, 2)
+			sfbs = searchFields.subList(2, searchFields.size())
+		}
 
-		val sfas = searchFields.subList(0, 2)
-		val sfbs = searchFields.subList(2, searchFields.size())
 		'''
 <template>
   <div class="table-page-search-wrapper">
