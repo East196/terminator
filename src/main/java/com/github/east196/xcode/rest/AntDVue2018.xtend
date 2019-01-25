@@ -11,7 +11,7 @@ import java.util.List
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019.doc''').filter [ three |
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019demo.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			geneAll(three)
@@ -180,6 +180,8 @@ export default {
 
 	def static recordlist(Project project, Record record,
 		List<Field> fields) {
+			var paths = project.webRoot.split("\\.")
+			val path = paths.subList(1,paths.length).join("/")
 		'''
 <template>
   <a-card title="«record.label»列表" :bordered="false">
@@ -230,7 +232,7 @@ export default {
 		  fieldDecoratorId="«f.name».id"
 		  :fieldDecoratorOptions="{rules: [
 		  «IF f.required=="required"»
-		  { required: true, message: '请输入«f.label»!' }
+		  { required: true, message: '请输入«f.label»!' },
 		  «ENDIF»
 		  ]}"
 		>
@@ -239,7 +241,40 @@ export default {
 			</a-select>
 		</a-form-item>
 «ELSEIF f.keyType == "12M"»
-
+«ELSEIF f.type == "date"»
+		<a-form-item
+		  :labelCol="labelCol"
+		  :wrapperCol="wrapperCol"
+		  label="«f.label»"
+		  fieldDecoratorId="«f.name»"
+		  :fieldDecoratorOptions="{rules: [
+		  «IF f.required=="required"»
+		  { required: true, message: '请输入«f.label»!' }
+		  «ENDIF»
+		  ]}"
+		>
+    <a-date-picker
+    style="width: 100%"/>
+</a-form-item>
+«ELSEIF f.type == "datetime"»
+		<a-form-item
+		  :labelCol="labelCol"
+		  :wrapperCol="wrapperCol"
+		  label="«f.label»"
+		  fieldDecoratorId="«f.name»"
+		  :fieldDecoratorOptions="{rules: [
+		  «IF f.required=="required"»
+		  { required: true, message: '请输入«f.label»!' }
+		  «ENDIF»
+		  ]}"
+		>
+    <a-date-picker
+      format="YYYY-MM-DD HH:mm:ss"
+      :disabledDate="disabledDate"
+      :disabledTime="disabledDateTime"
+      :showTime="{ defaultValue: moment('00:00:00', 'HH:mm:ss') }"
+    style="width: 100%"/>
+</a-form-item>
 «ELSE»
 		<a-form-item
 		  :labelCol="labelCol"
@@ -276,7 +311,7 @@ import STable from "@/components/table/";
 import ATextarea from "ant-design-vue/es/input/TextArea";
 import AInput from "ant-design-vue/es/input/Input";
 
-import «record.name.toFirstUpper»Search from "@/views/device/«record.name.toFirstUpper»Search";
+import «record.name.toFirstUpper»Search from "@/«path»/«record.name.toFirstUpper»Search";
 
 var moment = require("moment");
 
@@ -405,6 +440,25 @@ export default {
 «ENDFOR»
   },
   methods: {
+  	    moment,
+  	    range(start, end) {
+  	      const result = [];
+  	      for (let i = start; i < end; i++) {
+  	        result.push(i);
+  	      }
+  	      return result;
+  	    },
+  	    disabledDate(current) {
+  	      // Can not select days before today and today
+  	      return current && current < moment().endOf('day');
+  	    },
+  	    disabledDateTime() {
+  	      return {
+  	        disabledHours: () => this.range(0, 24).splice(4, 20),
+  	        disabledMinutes: () => this.range(30, 60),
+  	        disabledSeconds: () => [55, 56],
+  	      };
+  	    },
     handleCreate(e) {
       this.visible = true;
       setTimeout(() => {

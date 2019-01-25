@@ -95,7 +95,7 @@ doc 详细描述
 
 元数据定义验证规则，一个数据可能有多条验证规则数据
 required: true, #是否必需
-type: 'array',  #数据类别 string array date email等
+type: 'array',  #数据类别 string array date email tel等
 min: 1,			#最小
 max: 1,			#最大
 enum: ['admin', 'user', 'guest']
@@ -120,6 +120,7 @@ trigger: 'change'      #触发条件 change blur
 * `url`: 必需是类型 `url`.
 * `hex`: 必需是类型 `hex`.
 * `email`: 必需是类型 `email`.
+* `tel`: 必需是类型 `tel`.
 
 ## 搜索元数据
 元数据，数据，实现

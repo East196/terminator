@@ -12,7 +12,7 @@ import com.google.common.base.CaseFormat
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019.doc''').filter [ three |
+		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019demo.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			println(111)
@@ -23,6 +23,8 @@ class Mysql2018 {
 	def static geneAll(Three three) {
 		gene(three, "entity").copy
 		gene(three, "dao").copy
+		gene(three, "customdao").copy
+		gene(three, "customdaoimpl").copy
 		gene(three, "controller").copy
 		gene(three, "restcli").copy
 		gene(three, "validator").copy
@@ -46,6 +48,18 @@ class Mysql2018 {
 				content = dao(project, record,
 					fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
+
+			}
+			case "customdao": {
+				content = customdao(project, record,
+					fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\Customized«record.name.toFirstUpper»Repository.java'''
+
+			}
+			case "customdaoimpl": {
+				content = customdaoimpl(project, record,
+					fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\Customized«record.name.toFirstUpper»RepositoryImpl.java'''
 
 			}
 			case "controller": {
@@ -174,13 +188,53 @@ public class «klassType» {
 		'''
 	}
 
+	def static customdao(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		var daoType = record.name.toFirstUpper + "Repository"
+		var packageName = record.name.toFirstLower
+		'''
+package «basePackageName».«packageName»;
+
+import java.util.List;
+
+interface Customized«daoType» {
+	
+}
+		'''
+	}
+
+	def static customdaoimpl(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		var daoType = record.name.toFirstUpper + "Repository"
+		var packageName = record.name.toFirstLower
+		'''
+package «basePackageName».«packageName»;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+
+class Customized«daoType»Impl implements Customized«daoType»  {
+	
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+    
+}
+		'''
+	}
+
 	def static dao(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var packageName = record.name.toFirstLower
-		var tableName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, record.name)
-		'''
+		var tableName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE,
+			record.
+				name)
+				'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
@@ -192,7 +246,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
-public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpecificationExecutor<«beanType»>{
+public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpecificationExecutor<«beanType»>, Customized«daoType»{
 	
 	«FOR f : fields»
 	«IF f.getKeyType=="U"»
@@ -213,21 +267,23 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 	// add more ...
 }
 		'''
-	}
+			}
 
-	def static controller(Project project, Record record, List<Field> fields) {
-		val basePackageName = project.root
-		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
-		var beanType = record.name.toFirstUpper
-		var daoType = record.name.toFirstUpper + "Repository"
-		var klassType = record.name.toFirstUpper + "Controller"
-		var packageName = record.name.
-			toFirstLower
-		'''
+			def static controller(Project project, Record record, List<Field> fields) {
+				val basePackageName = project.root
+				val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
+					join(".")
+				var beanType = record.name.toFirstUpper
+				var daoType = record.name.toFirstUpper + "Repository"
+				var klassType = record.name.toFirstUpper + "Controller"
+				var packageName = record.name.
+					toFirstLower
+				'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
@@ -284,7 +340,7 @@ public class «klassType» {
 	
 	@ApiOperation(value = "分页查询«record.label»")
 	@ApiImplicitParams({
-			@ApiImplicitParam(name = "pageNo",value = "页码",paramType ="query",required = false,dataType = "Integer",defaultValue = "1"),
+			@ApiImplicitParam(name = "pageNo",value = "页码",paramType ="query", required = false,dataType = "Integer",defaultValue = "1"),
 			@ApiImplicitParam(name = "pageSize",value = "每页显示条数",paramType ="query",required = false,dataType = "Integer",defaultValue = "20"),
 			@ApiImplicitParam(name = "queryMap",value = "查询条件",paramType ="body",required = false,dataType = "Map")
 	})
@@ -295,7 +351,7 @@ public class «klassType» {
 	@RequestBody Map<String, String> queryMap) {
 		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
 		searchFilters.add(new SearchFilter("enable", SearchFilter.Operator.EQ,true));
-		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize,Sort.by(Order.desc("id")));
+		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize, Sort.by(Order.desc("id")));
     	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
 		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
 		TableResult<List<«beanType»>> tableResult = new TableResult<List<«beanType»>>();
@@ -308,33 +364,55 @@ public class «klassType» {
 	}	
 	
 	
-	@ApiOperation(value = "新建/编辑 «record.label»信息")
-	@ApiImplicitParam(name = "«beanType.toFirstLower»",value = "«record.label»对象",required = true,paramType = "body",dataType = "«beanType»")
+	@ApiOperation(value = "新建 «record.label»信息")
+	@ApiImplicitParam(name = "«beanType.toFirstLower»",value = "«record.label»对象", required = true, paramType = "body",dataType = "«beanType»")
 	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public Response createOrUpdate(@RequestBody @Valid «beanType» «beanType.toFirstLower», BindingResult result) {
+	public DataResponse<«beanType»> create(@RequestBody @Valid «beanType» «beanType.toFirstLower», BindingResult result) {
 		LOGGER.debug("add «beanType.toFirstLower»:  {}", «beanType.toFirstLower»);
 		if (result.hasErrors()) {
 			StringBuffer sb = new StringBuffer();
 			for (ObjectError msg : result.getAllErrors())
 				sb.append(msg.getDefaultMessage()).append(" ");
-			return new Response("-1", sb.toString());
+			return new DataResponse<«beanType»>("-1", sb.toString());
 		}
 		«beanType.toFirstLower».setEnable(true);
-		«daoType.toFirstLower».save(«beanType.toFirstLower»);
-	    return new Response("0", "ok");
+		«beanType» saved«beanType» = «daoType.toFirstLower».save(«beanType.toFirstLower»);
+	    return new DataResponse<«beanType»>("0", "ok", saved«beanType»);
 	}
 	
-	
+	@ApiOperation(value = "编辑 «record.label»信息")
+	@ApiImplicitParam(name = "«beanType.toFirstLower»",value = "«record.label»对象", required = true, paramType = "body",dataType = "«beanType»")
+	@RequestMapping(value = "/", method = RequestMethod.PUT)
+	public DataResponse<«beanType»> update(@RequestBody @Valid «beanType» «beanType.toFirstLower», BindingResult result) {
+		LOGGER.debug("add «beanType.toFirstLower»:  {}", «beanType.toFirstLower»);
+		if (result.hasErrors()) {
+			StringBuffer sb = new StringBuffer();
+			for (ObjectError msg : result.getAllErrors())
+				sb.append(msg.getDefaultMessage()).append(" ");
+			return new DataResponse<«beanType»>("-1", sb.toString());
+		}
+		«beanType.toFirstLower».setEnable(true);
+		«beanType» saved«beanType» = «daoType.toFirstLower».save(«beanType.toFirstLower»);
+	    return new DataResponse<«beanType»>("0", "ok", saved«beanType»);
+	}
+
+	@ApiOperation(value = "根据ID获取 «record.label»信息")
+	@ApiImplicitParam(name="id",value = " «record.label»ID",required = true,paramType = "path",dataType = "String")
+	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
+	public DataResponse<«beanType»> get(@PathVariable("id") String id) {
+		LOGGER.debug("id:  {}", id);
+		Optional<«beanType»> «beanType.toFirstLower» = «daoType.toFirstLower».findById(id);
+		return new DataResponse<«beanType»>("0", "ok", «beanType.toFirstLower».get());
+	}
+
 	@ApiOperation(value = "根据ID删除 «record.label»信息")
-	@ApiImplicitParam(name="id",value = " «record.label»ID",required = true,paramType = "path",dataType = "Integer")
+	@ApiImplicitParam(name="id",value = " «record.label»ID",required = true,paramType = "path",dataType = "String")
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
 		«daoType.toFirstLower».updateEnableStatus(id);
 		return new Response("0", "ok");
 	}
-	
-	
 
 	@ApiOperation(value = "根据ID批量删除«record.label»信息")
 	@ApiImplicitParam(name ="ids",value = "id集合",required = true,paramType = "body",dataType = "List")
@@ -353,15 +431,16 @@ public class «klassType» {
 	}
 }
 		'''
-	} // TODO PUT 方法合并对象 
+			} // TODO PUT 方法合并对象 
 
-	def static restcli(Project project, Record record, List<Field> fields) {
-		val basePackageName = project.root
-		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
-		var beanType = record.name.toFirstUpper
-		var klassType = record.name.toFirstUpper + "Cli"
-		var packageName = record.name.toFirstLower
-		'''
+			def static restcli(Project project, Record record, List<Field> fields) {
+				val basePackageName = project.root
+				val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
+					join(".")
+				var beanType = record.name.toFirstUpper
+				var klassType = record.name.toFirstUpper + "Cli"
+				var packageName = record.name.toFirstLower
+				'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
@@ -393,7 +472,10 @@ public interface «klassType» {
 	
 
 	@RequestMapping(value = "/", method = RequestMethod.POST)
-	public Response createOrUpdate(@RequestBody «beanType» «beanType.toFirstLower»);
+	public Response create(@RequestBody «beanType» «beanType.toFirstLower»);
+	
+	@RequestMapping(value = "/", method = RequestMethod.PUT)
+	public Response update(@RequestBody «beanType» «beanType.toFirstLower»);
 
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable("id") String id);
@@ -403,14 +485,14 @@ public interface «klassType» {
 
 }
 		'''
-	} // TODO PUT 方法合并对象 
+			} // TODO PUT 方法合并对象 
 
-	def static validator(Project project, Record record, List<Field> fields) {
-		val basePackageName = project.root
-		var beanType = record.name.toFirstUpper
-		var klassType = record.name.toFirstUpper + "Validator"
-		var packageName = record.name.toFirstLower
-		'''
+			def static validator(Project project, Record record, List<Field> fields) {
+				val basePackageName = project.root
+				var beanType = record.name.toFirstUpper
+				var klassType = record.name.toFirstUpper + "Validator"
+				var packageName = record.name.toFirstLower
+				'''
 package «basePackageName».«packageName»;
 
 import org.springframework.validation.Errors;
@@ -433,6 +515,7 @@ public class «klassType» implements Validator {
 
 }
 	    '''
-	}
+			}
 
-}
+		}
+		
