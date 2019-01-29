@@ -413,7 +413,7 @@ export default {
         var body = Object.assign(parameter, this.queryParam);
         return this.$http
           .post(
-            this.$store.state.app.approot + "/controller/v1/«record.name»/page",
+            this.$store.state.app.approot + "/controller/v1/«record.name.toFirstLower»/page",
             body,
             { params: parameter }
           )

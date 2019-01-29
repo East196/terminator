@@ -39,7 +39,7 @@ class DocMetaParser implements MetaParser {
 			val recordRow = table.getRow(3)
 			record.projectId = project.id
 			record.dbType = recordRow.getCell(0).text.trim
-			record.name = recordRow.getCell(1).text.trim
+			record.name = recordRow.getCell(1).text.trim.toFirstLower
 			record.label = recordRow.getCell(2).text.trim
 			record.doc = recordRow.getCell(3).text.trim
 			println(record)
