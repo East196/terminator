@@ -18,6 +18,10 @@ class GeneResult {
 	}
 
 	def copy() {
+		if(content.toString.isNullOrEmpty||path.toString.nullOrEmpty){
+			println("content or path is null or empty!")
+			return
+		}
 		Bots.copy(content, path.toString)
 	}
 }

@@ -9,6 +9,7 @@ import com.github.east196.xcode.model.Three
 import java.util.List
 import org.apache.poi.hwpf.usermodel.Table
 import org.eclipse.xtend.lib.annotations.Data
+import com.github.east196.xcode.model.GeneResult
 
 class Api2018 {
 	val static projectPath = '''E:\workspace\github\east196\java\xcode'''
@@ -51,11 +52,8 @@ class Api2018 {
 
 		datatables.forEach [ table |
 			val three = table2data(table)
-			var Project project = three.project
-			var Record record = three.record
-			var List<Field> fields = three.fields
-			var content = bean(project, record, fields)
-			println(content)
+			threeGene(three).copy
+			
 		]
 
 		resttables.forEach [ table |
@@ -65,10 +63,10 @@ class Api2018 {
 			var Three reqBody = rest.reqBody
 			var Three respBody = rest.respBody
 
-			println(threeContent(headers))
-			println(threeContent(params))
-			println(threeContent(reqBody))
-			println(threeContent(respBody))
+			threeGene(headers).copy
+			threeGene(params).copy
+			threeGene(reqBody).copy
+			threeGene(respBody).copy
 		]
 
 	}
@@ -81,7 +79,26 @@ class Api2018 {
 			return ''''''
 		}
 		var content = bean(project, record, fields)
+		
 		content
+	}
+	protected def static CharSequence threePath(Three three) {
+		var Project project = three.project
+		var Record record = three.record
+		var List<Field> fields = three.fields
+		if (fields.size ==0){
+			return ''''''
+		}
+		var path = '''«project.path»\«record.name.toFirstUpper».java'''
+		path
+	}
+	
+	protected def static GeneResult threeGene(Three three) {
+		var content = threeContent(three)
+		var path = threePath(three)
+		println(path)
+		println(content)
+		new GeneResult(content, path)
 	}
 
 	def static table2rest(Table table) {
