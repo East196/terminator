@@ -23,4 +23,7 @@ class Project {
 	
 	String webPath
 	String webRoot
+	
+	String androidPath
+	String androidRoot
 }

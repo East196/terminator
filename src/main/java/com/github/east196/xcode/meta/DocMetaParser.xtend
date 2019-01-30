@@ -10,6 +10,7 @@ import org.apache.poi.hwpf.usermodel.TableIterator
 
 class DocMetaParser implements MetaParser {
 
+
 	override action(String docx) {
 		val tables = tables(docx)
 		val projectTable = tables.get(0)
@@ -66,6 +67,9 @@ class DocMetaParser implements MetaParser {
 		}
 		threes
 	}
+	
+	
+	
 
 	static def doc(String path) {
 		var is = new FileInputStream(path)
