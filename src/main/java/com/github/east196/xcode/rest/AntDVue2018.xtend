@@ -357,11 +357,7 @@ export default {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
         	key: "«f.name»",       	
-        	customRender: text => {
-        		if (_.has(text,"name")){
-        			return text.name
-        		}else{
-        		}	return ""
+        	customRender: text => <span v-model="text.name"></span>
         	}
         },
         «ELSEIF f.type == "datetime"»
