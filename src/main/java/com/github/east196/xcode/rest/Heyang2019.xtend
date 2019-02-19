@@ -9,10 +9,10 @@ import com.github.east196.xcode.model.GeneResult
 import com.github.east196.xcode.meta.DocMetaParser
 import com.google.common.base.CaseFormat
 
-class Mysql2018 {
+class Heyang2019 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019demo.doc''').filter [ three |
+		new DocMetaParser().action('''D:\hyyy\统一数据文档 Test.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			println(111)
@@ -22,12 +22,13 @@ class Mysql2018 {
 
 	def static geneAll(Three three) {
 		gene(three, "entity").copy
+		gene(three, "service").copy
+		gene(three, "serviceimpl").copy
 		gene(three, "dao").copy
 		gene(three, "customdao").copy
 		gene(three, "customdaoimpl").copy
 		gene(three, "controller").copy
 		gene(three, "restcli").copy
-		gene(three, "validator").copy
 	}
 
 	def static gene(Three three, String type) {
@@ -45,26 +46,22 @@ class Mysql2018 {
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
 			}
 			case "dao": {
-				content = dao(project, record,
-					fields)
+				content = dao(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Repository.java'''
 
 			}
 			case "customdao": {
-				content = customdao(project, record,
-					fields)
+				content = customdao(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\Customized«record.name.toFirstUpper»Repository.java'''
 
 			}
 			case "customdaoimpl": {
-				content = customdaoimpl(project, record,
-					fields)
+				content = customdaoimpl(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\Customized«record.name.toFirstUpper»RepositoryImpl.java'''
 
 			}
 			case "controller": {
-				content = controller(project, record,
-					fields)
+				content = controller(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Controller.java'''
 
 			}
@@ -73,10 +70,13 @@ class Mysql2018 {
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Cli.java'''
 
 			}
-			case "validator": {
-				content = validator(project, record,
-					fields)
-				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Validator.java'''
+			case "service": {
+				content = Service(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»Service.java'''
+			}
+			case "serviceimpl": {
+				content = ServiceImpl(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»ServiceImpl.java'''
 			}
 			default: {
 				content = entity(three.project, three.record, three.fields)
@@ -84,6 +84,134 @@ class Mysql2018 {
 			}
 		}
 		return new GeneResult(content, path)
+	}
+
+	// service
+	def static Service(Project project, Record record, List<Field> fields) {
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
+		var klassType = record.name.toFirstUpper
+		val basePackageName = project.root
+		'''
+			package «basePackageName».«klassType.toFirstLower»;
+			import java.util.List;
+			import java.util.Map;
+			import «commonPackageName».common.vo.DataResponse;
+			import «commonPackageName».common.vo.Response;
+			import «commonPackageName».common.vo.TableResult;
+			import org.springframework.data.jpa.domain.Specification;
+			public interface «klassType»Service {
+				public List<«klassType»> findAll(Specification<«klassType»> spec);
+				public TableResult<List<«klassType»>> findAll(Integer pageNo,Integer pageSize, Map<String, String> queryMap);
+				public DataResponse<«klassType»> save(«klassType» «klassType.toFirstLower»);
+				public DataResponse<«klassType»> findByEnableId(String id);
+				public Response delete(String id);
+				public Response deletes(List<String> ids);
+			
+			}
+		'''
+	}
+
+	// serviceImpl
+	def static ServiceImpl(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		var klassType = record.name.toFirstUpper
+		var daoType = record.name.toFirstUpper + "Repository"
+		var oldInfo = "old" + klassType + "Info"
+		var info = klassType + "Info"
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
+		'''
+			package «basePackageName».«klassType.toFirstLower»;
+					
+					import java.util.List;
+					import java.util.Map;
+					
+					import org.springframework.beans.factory.annotation.Autowired;
+					import org.springframework.data.domain.Page;
+					import org.springframework.data.domain.Sort;
+					import org.springframework.data.domain.Sort.Order;
+					import org.springframework.data.domain.PageRequest;
+					import org.springframework.data.jpa.domain.Specification;
+					import org.springframework.stereotype.Service;
+					
+					import «commonPackageName».common.DynamicSpecifications;
+					import «commonPackageName».common.Merger;
+					import «commonPackageName».common.SearchFilter;
+					import «commonPackageName».common.YjBoon;
+					import «commonPackageName».common.vo.DataResponse;
+					import «commonPackageName».common.vo.Response;
+					import «commonPackageName».common.vo.TableResult;
+					
+					@Service
+					public class «klassType»ServiceImpl implements «klassType»Service{
+					
+						@Autowired
+						private «klassType»Repository «klassType.toFirstLower»Repository;
+					
+						@Override
+						  public List<«klassType»> findAll(Specification<«klassType»> spec) {
+						   	    return «klassType.toFirstLower»Repository.findAll(spec);
+						   }
+			
+					    @Override
+					    public TableResult<List<«klassType»>> findAll(Integer pageNo,Integer pageSize, Map<String, String> queryMap) {
+					    	List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «klassType».class);
+					    	searchFilters.add(new SearchFilter("enable", SearchFilter.Operator.EQ,true));
+					    	PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize, Sort.by(Order.desc("id")));
+					    	Specification<«klassType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «klassType».class);
+					    	Page<«klassType»> «klassType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
+					    	TableResult<List<«klassType»>> tableResult = new TableResult<List<«klassType»>>();
+					    	tableResult.setPageNo(«klassType.toFirstLower»s.getNumber()+1);
+					    	tableResult.setPageSize(«klassType.toFirstLower»s.getSize());
+					    	tableResult.setTotalCount(«klassType.toFirstLower»s.getTotalElements());
+					    	tableResult.setTotalPage(«klassType.toFirstLower»s.getTotalPages());
+					    	tableResult.setData(«klassType.toFirstLower»s.getContent());
+					    	return tableResult;
+					    }
+			
+					    @Override
+					    public DataResponse<«klassType»> save(«klassType» «klassType.toFirstLower») {
+					         «klassType» saveInfo;
+					         if(YjBoon.isEmpty(«klassType.toFirstLower».getId())){
+					         	«klassType.toFirstLower».setEnable(true);
+					         	  saveInfo= «daoType.toFirstLower».save(«klassType.toFirstLower»);
+					         }else{
+					            «klassType» «oldInfo» = «daoType.toFirstLower».findByIdAndEnableIsTrue(«klassType.toFirstLower».getId());
+					            «klassType.toFirstLower» = Merger.mergeNotNullToFirst(«oldInfo», «klassType.toFirstLower»);
+					            saveInfo= «daoType.toFirstLower».save(«klassType.toFirstLower»);
+					         }
+					         if(YjBoon.isEmpty(saveInfo)){
+					            return new DataResponse<>("-1","error");
+					         }
+					        return new DataResponse<>("0","OK",saveInfo);
+					    }
+					    
+					    @Override
+					    public DataResponse<«klassType»> findByEnableId(String id){
+					    	«klassType» «info»=«daoType.toFirstLower».findByIdAndEnableIsTrue(id);
+					    	if(YjBoon.isEmpty(«info»)){
+					    		return new DataResponse<>("-1","error");
+					    	}
+					    	return new DataResponse<>("0","OK",«info»);
+					    }
+					    @Override
+					    public Response delete(String id) {
+					         Integer res=«daoType.toFirstLower».updateEnableStatus(id);
+					         if(YjBoon.isEmpty(res)){
+					         	return new DataResponse<>("-1","删除失败");
+					         }
+					       return new DataResponse<>("0","OK",res);
+					    }
+					    
+					    @Override
+					    public Response deletes(List<String> ids) {
+					    	Integer res=«daoType.toFirstLower».updateEnableStatusBacth(ids);
+					    	if(res==ids.size()){
+					    		return new DataResponse<>("0","OK",res);
+					    	}
+					    	return new DataResponse<>("-1","删除失败");
+					    }
+					}
+		'''
 	}
 
 	def static entity(Project project, Record record, List<Field> fields) {
@@ -152,6 +280,7 @@ public class «klassType» {
 	@Column(length = 32)
 	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="M21"»
+	@NotNull(message = "«f.doc»不能为空！")
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»s"})
 	@ManyToOne(fetch=FetchType.EAGER,optional=false)
 	@NotFound(action= NotFoundAction.IGNORE)
@@ -231,11 +360,9 @@ class Customized«daoType»Impl implements Customized«daoType»  {
 		var beanType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
 		var packageName = record.name.toFirstLower
-		var tableName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE,
-			record.
-				name)
-				'''
-package «basePackageName».«packageName»;
+		var tableName = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, record.name)
+		'''
+package «basePackageName».«packageName.toFirstLower»;
 
 import java.util.List;
 
@@ -254,31 +381,31 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 	«ENDIF»
 	«ENDFOR»
 	
+	public «beanType» findByIdAndEnableIsTrue(String id);
+	
 	@Transactional
 	@Modifying
 	@Query(value = "update «tableName» set enable = 0 where id = ?1",nativeQuery = true)
-	public void updateEnableStatus(String id);
+	public Integer updateEnableStatus(String id);
 	
 	
 	@Transactional
 	@Modifying
 	@Query(value = "update «tableName» set enable = 0 where id in (:ids)",nativeQuery = true)
-	public void updateEnableStatusBacth(List<String> ids);
+	public Integer updateEnableStatusBacth(List<String> ids);
 	// add more ...
 }
 		'''
-			}
+	}
 
-			def static controller(Project project, Record record, List<Field> fields) {
-				val basePackageName = project.root
-				val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
-					join(".")
-				var beanType = record.name.toFirstUpper
-				var daoType = record.name.toFirstUpper + "Repository"
-				var klassType = record.name.toFirstUpper + "Controller"
-				var packageName = record.name.
-					toFirstLower
-				'''
+	def static controller(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
+		var beanType = record.name.toFirstUpper
+		var serviceType = record.name.toFirstUpper + "Service"
+		var klassType = record.name.toFirstUpper + "Controller"
+		var packageName = record.name.toFirstLower
+		'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
@@ -313,7 +440,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import «commonPackageName».common.DynamicSpecifications;
-import «commonPackageName».common.Merger;
 import «commonPackageName».common.SearchFilter;
 import «commonPackageName».common.vo.DataResponse;
 import «commonPackageName».common.vo.Response;
@@ -327,15 +453,16 @@ public class «klassType» {
 	private static final Logger LOGGER = LoggerFactory.getLogger(«klassType».class);
 
 	@Autowired
-	private «daoType» «daoType.toFirstLower»;
+	private «serviceType» «serviceType.toFirstLower»;
 	
 	@ApiOperation(value = "查询«record.label»信息")
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public DataResponse<List<«beanType»>> search(HttpServletRequest request) {
 		Map<String, String[]> requestParameterMap = request.getParameterMap();
 		List<SearchFilter> searchFilters = SearchFilter.from(requestParameterMap, «klassType».class);
+		searchFilters.add(new SearchFilter("enable", SearchFilter.Operator.EQ, true));
 		Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
-		List<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec);
+		List<«beanType»> «beanType.toFirstLower»s = «serviceType.toFirstLower».findAll(spec);
 		return new DataResponse<List<«beanType»>>("0", "查询成功!", «beanType.toFirstLower»s);
 	}
 	
@@ -350,17 +477,7 @@ public class «klassType» {
 	@RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
 	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
 	@RequestBody Map<String, String> queryMap) {
-		List<SearchFilter> searchFilters = SearchFilter.fromQueryMap(queryMap, «beanType».class);
-		searchFilters.add(new SearchFilter("enable", SearchFilter.Operator.EQ,true));
-		PageRequest pageRequest = PageRequest.of(pageNo-1, pageSize, Sort.by(Order.desc("id")));
-    	Specification<«beanType»> spec = DynamicSpecifications.bySearchFilter(searchFilters, «beanType».class);
-		Page<«beanType»> «beanType.toFirstLower»s = «daoType.toFirstLower».findAll(spec, pageRequest);
-		TableResult<List<«beanType»>> tableResult = new TableResult<List<«beanType»>>();
-		tableResult.setPageNo(«beanType.toFirstLower»s.getNumber()+1);
-		tableResult.setPageSize(«beanType.toFirstLower»s.getSize());
-		tableResult.setTotalCount(«beanType.toFirstLower»s.getTotalElements());
-		tableResult.setTotalPage(«beanType.toFirstLower»s.getTotalPages());
-		tableResult.setData(«beanType.toFirstLower»s.getContent());
+		TableResult<List<«beanType»>> tableResult = «serviceType.toFirstLower».findAll(pageNo, pageSize,queryMap);
 		return new DataResponse<TableResult<List<«beanType»>>>("0", "查询成功!", tableResult);
 	}	
 	
@@ -376,11 +493,7 @@ public class «klassType» {
 				sb.append(msg.getDefaultMessage()).append(" ");
 			return new DataResponse<«beanType»>("-1", sb.toString());
 		}
-		«IF fields.filter[it.name=="enable"].toList.size>0»
-		«beanType.toFirstLower».setEnable(true);
-		«ENDIF»
-		«beanType» saved«beanType» = «daoType.toFirstLower».save(«beanType.toFirstLower»);
-	    return new DataResponse<«beanType»>("0", "ok", saved«beanType»);
+	    return «serviceType.toFirstLower».save(«beanType.toFirstLower»);
 	}
 	
 	@ApiOperation(value = "编辑 «record.label»信息")
@@ -394,10 +507,7 @@ public class «klassType» {
 				sb.append(msg.getDefaultMessage()).append(" ");
 			return new DataResponse<«beanType»>("-1", sb.toString());
 		}
-        «beanType» old«beanType» = «daoType.toFirstLower».findById(«beanType.toFirstLower».getId()).orElse(null);
-        «beanType» new«beanType» = Merger.mergeNotNullToFirst(old«beanType», «beanType.toFirstLower»);
-		«beanType» saved«beanType» = «daoType.toFirstLower».save(new«beanType»);
-	    return new DataResponse<«beanType»>("0", "ok", saved«beanType»);
+	    return «serviceType.toFirstLower».save(«beanType.toFirstLower»);
 	}
 
 	@ApiOperation(value = "根据ID获取 «record.label»信息")
@@ -405,8 +515,7 @@ public class «klassType» {
 	@RequestMapping(value = "/{id}", method = RequestMethod.GET)
 	public DataResponse<«beanType»> get(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
-		Optional<«beanType»> «beanType.toFirstLower» = «daoType.toFirstLower».findById(id);
-		return new DataResponse<«beanType»>("0", "ok", «beanType.toFirstLower».orElse(null));
+		return «serviceType.toFirstLower».findByEnableId(id);
 	}
 
 	@ApiOperation(value = "根据ID删除 «record.label»信息")
@@ -414,8 +523,7 @@ public class «klassType» {
 	@RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
 	public Response delete(@PathVariable("id") String id) {
 		LOGGER.debug("id:  {}", id);
-		«daoType.toFirstLower».updateEnableStatus(id);
-		return new Response("0", "ok");
+		return «serviceType.toFirstLower».delete(id);
 	}
 
 	@ApiOperation(value = "根据ID批量删除«record.label»信息")
@@ -423,28 +531,19 @@ public class «klassType» {
 	@RequestMapping(value = "/deletes", method = RequestMethod.POST)
 	public Response «beanType.toFirstLower»Deletes(@RequestBody List<String> ids) {
 		LOGGER.debug("ids:  {}", ids);
-		for (String id : ids) {
-			«daoType.toFirstLower».updateEnableStatus(id);
-		}
-		return new Response("0", "ok");
-	}
-
-	@InitBinder("«beanType.toFirstLower»")
-	public void initBinder(DataBinder binder) {
-		binder.setValidator(new «beanType»Validator());
+		return «serviceType.toFirstLower».deletes(ids);
 	}
 }
 		'''
-			} // TODO PUT 方法合并对象 
+	} // TODO PUT 方法合并对象 
 
-			def static restcli(Project project, Record record, List<Field> fields) {
-				val basePackageName = project.root
-				val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
-					join(".")
-				var beanType = record.name.toFirstUpper
-				var klassType = record.name.toFirstUpper + "Cli"
-				var packageName = record.name.toFirstLower
-				'''
+	def static restcli(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
+		var beanType = record.name.toFirstUpper
+		var klassType = record.name.toFirstUpper + "Cli"
+		var packageName = record.name.toFirstLower
+		'''
 package «basePackageName».«packageName»;
 
 import java.util.List;
@@ -489,37 +588,7 @@ public interface «klassType» {
 
 }
 		'''
-			} // TODO PUT 方法合并对象 
+	} // TODO PUT 方法合并对象 
 
-			def static validator(Project project, Record record, List<Field> fields) {
-				val basePackageName = project.root
-				var beanType = record.name.toFirstUpper
-				var klassType = record.name.toFirstUpper + "Validator"
-				var packageName = record.name.toFirstLower
-				'''
-package «basePackageName».«packageName»;
-
-import org.springframework.validation.Errors;
-import org.springframework.validation.ValidationUtils;
-import org.springframework.validation.Validator;
-
-public class «klassType» implements Validator {
-
-	@Override
-	public boolean supports(Class<?> klass) {
-		return «beanType».class.equals(klass);
-	}
-
-	@Override
-	public void validate(Object object, Errors errors) {
-		«FOR f : fields.filter[it.required.equals("required")].toList»
-		ValidationUtils.rejectIfEmpty(errors, "«f.name.toFirstLower»", null, "«f.label»不能为空！");
-		«ENDFOR»
-	}
 
 }
-	    '''
-			}
-
-		}
-		

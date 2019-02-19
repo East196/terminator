@@ -436,25 +436,25 @@ export default {
 «ENDFOR»
   },
   methods: {
-  	    moment,
-  	    range(start, end) {
-  	      const result = [];
-  	      for (let i = start; i < end; i++) {
-  	        result.push(i);
-  	      }
-  	      return result;
-  	    },
-  	    disabledDate(current) {
-  	      // Can not select days before today and today
-  	      return current && current < moment().endOf('day');
-  	    },
-  	    disabledDateTime() {
-  	      return {
-  	        disabledHours: () => this.range(0, 24).splice(4, 20),
-  	        disabledMinutes: () => this.range(30, 60),
-  	        disabledSeconds: () => [55, 56],
-  	      };
-  	    },
+    moment,
+    range(start, end) {
+      const result = [];
+      for (let i = start; i < end; i++) {
+        result.push(i);
+      }
+      return result;
+    },
+    disabledDate(current) {
+      // Can not select days before today and today
+      return current && current < moment().endOf('day');
+    },
+    disabledDateTime() {
+      return {
+        disabledHours: () => this.range(0, 24).splice(4, 20),
+        disabledMinutes: () => this.range(30, 60),
+        disabledSeconds: () => [55, 56],
+      };
+    },
     handleCreate(e) {
       this.visible = true;
       setTimeout(() => {
