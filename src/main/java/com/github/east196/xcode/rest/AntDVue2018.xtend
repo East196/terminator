@@ -358,7 +358,6 @@ export default {
         	dataIndex: "«f.name»",
         	key: "«f.name»",       	
         	customRender: text => <span v-model="text.name"></span>
-        	}
         },
         «ELSEIF f.type == "datetime"»
         {

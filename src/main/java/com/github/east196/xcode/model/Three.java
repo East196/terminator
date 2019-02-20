@@ -10,6 +10,8 @@ public class Three {
 	Record record;
 	List<Field> fields;
 	
+	public Three(){}
+	
 	public Three(Project project, Record record, List<Field> fields) {
 		this.project=project;
 		this.record=record;

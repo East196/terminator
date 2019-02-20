@@ -7,6 +7,7 @@ import com.github.east196.xcode.model.Three
 import java.io.FileInputStream
 import org.apache.poi.hwpf.HWPFDocument
 import org.apache.poi.hwpf.usermodel.TableIterator
+import java.io.InputStream
 
 class DocMetaParser implements MetaParser {
 
@@ -75,9 +76,17 @@ class DocMetaParser implements MetaParser {
 		var is = new FileInputStream(path)
 		new HWPFDocument(is)
 	}
-
+	
 	static def tables(String path) {
-		var range = path.doc.range
+		path.doc.tables
+	}
+	
+	static def tables(InputStream is) {
+		new HWPFDocument(is).tables
+	}
+
+	static def tables(HWPFDocument doc) {
+		var range = doc.range
 		val tables = newArrayList()
 		var tableIterator = new TableIterator(range)
 		while (tableIterator.hasNext) {
