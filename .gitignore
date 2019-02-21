@@ -4,6 +4,9 @@
 /.settings/
 /target/**
 /src/main/xtend-gen/
+__pycache__
+src-gen
+.pydevproject
 
 # Compiled class file
 *.class

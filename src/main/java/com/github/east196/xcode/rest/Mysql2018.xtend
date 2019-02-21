@@ -12,7 +12,7 @@ import com.google.common.base.CaseFormat
 class Mysql2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019demo.doc''').filter [ three |
+		new DocMetaParser().action('''E:\backup\xcode\uniondata2019demo.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			println(111)

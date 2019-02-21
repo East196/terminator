@@ -11,7 +11,7 @@ import java.util.List
 class AntDVue2018 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''E:\backup\xcode\统一数据文档2019demo.doc''').filter [ three |
+		new DocMetaParser().action('''E:\backup\xcode\uniondata2019demo.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
 			geneAll(three)
@@ -357,7 +357,7 @@ export default {
         	title: "«f.label»",
         	dataIndex: "«f.name»",
         	key: "«f.name»",       	
-        	customRender: text => <span v-model="text.name"></span>
+        	customRender: text => <span>{text.name} | {text.label}</span>
         },
         «ELSEIF f.type == "datetime"»
         {
