@@ -12,6 +12,11 @@ class Args{
 @RestController
 class Dev {
 
+    @RequestMapping("/")
+    String index() {
+      "Dev"
+    }
+
     @RequestMapping("/json")
     List<Three> json(@RequestBody Args args) {
       new DocMetaParser().action(args.file)
