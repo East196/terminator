@@ -3,7 +3,7 @@ import com.github.east196.xcode.model.Three
 import java.util.List
 import com.github.east196.xcode.rest.Mysql2018
 import com.github.east196.xcode.rest.AntDVue2018
-
+import com.github.east196.xcode.rest.Heyang2019
 
 class Args{
   String file
@@ -22,12 +22,17 @@ class Dev {
       new DocMetaParser().action(args.file)
     }
 
+    @RequestMapping("/hbc")
+    String hbackcode(@RequestBody Three three,String type) {
+      Heyang2019.gene(three, type).content
+    }
+
     @RequestMapping("/bc")
     String backcode(@RequestBody Three three,String type) {
       Mysql2018.gene(three, type).content
     }
 	
-	@RequestMapping("/fc")
+    @RequestMapping("/fc")
     String frontcode(@RequestBody Three three,String type) {
       AntDVue2018.gene(three, type).content
     }

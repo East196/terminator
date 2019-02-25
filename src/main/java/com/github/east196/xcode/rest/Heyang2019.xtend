@@ -22,12 +22,15 @@ class Heyang2019 {
 
 	def static geneAll(Three three) {
 		gene(three, "entity").copy
+		gene(three, "crudservice").copy
+		gene(three, "crudserviceimpl").copy
 		gene(three, "service").copy
 		gene(three, "serviceimpl").copy
 		gene(three, "dao").copy
 		gene(three, "customdao").copy
 		gene(three, "customdaoimpl").copy
 		gene(three, "controller").copy
+		gene(three, "coustomcontroller").copy
 		gene(three, "restcli").copy
 	}
 
@@ -78,6 +81,18 @@ class Heyang2019 {
 				content = ServiceImpl(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»ServiceImpl.java'''
 			}
+			case "crudservice": {
+				content = CrudService(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»CrudService.java'''
+			}
+			case "crudserviceimpl": {
+				content = CrudServiceImpl(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»CrudServiceImpl.java'''
+			}
+			case "coustomcontroller":{
+				content = CoustomCon1troller(project, record, fields)
+				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»CoustomController.java'''
+			}
 			default: {
 				content = entity(three.project, three.record, three.fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
@@ -85,9 +100,63 @@ class Heyang2019 {
 		}
 		return new GeneResult(content, path)
 	}
+	
+	def static CoustomCon1troller(Project project, Record record, List<Field> fields) {
+		val basePackageName = project.root
+		var packageName = record.name.toFirstLower
+		var klassType = record.name.toFirstUpper
+		var serviceType = record.name.toFirstUpper + "Service"
+		'''
+		package «basePackageName».«packageName»;
+		
+		import org.slf4j.Logger;
+		import org.slf4j.LoggerFactory;
+		import io.swagger.annotations.Api;
+		import org.springframework.web.bind.annotation.RestController;
+		import org.springframework.beans.factory.annotation.Autowired;
+		
+		@Api("自定义«record.label»管理接口")
+		@RestController
+		public class «klassType»CoustomController {
+			
+				private static final Logger LOGGER = LoggerFactory.getLogger(«klassType»Controller.class);
+			
+				@Autowired
+				private «serviceType» «serviceType.toFirstLower»;
+			
+		}
+		 '''
+	}
+	
+	def static ServiceImpl(Project project, Record record, List<Field> fields) {
+		var klassType = record.name.toFirstUpper
+		val basePackageName = project.root
+		''' 
+		package «basePackageName».«klassType.toFirstLower»;
+		
+		import org.springframework.stereotype.Service;
+		
+		@Service
+		public class «klassType»ServiceImpl extends «klassType»CrudServiceImpl implements «klassType»Service {
+			
+		}
+		'''
+	}
+	
+	def static Service(Project project, Record record, List<Field> fields) {
+		var klassType = record.name.toFirstUpper
+		val basePackageName = project.root
+		''' 
+		package «basePackageName».«klassType.toFirstLower»;
+		
+		public interface «klassType»Service extends «klassType»CrudService{
+			
+		}
+		'''
+	}
 
 	// service
-	def static Service(Project project, Record record, List<Field> fields) {
+	def static CrudService(Project project, Record record, List<Field> fields) {
 		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).join(".")
 		var klassType = record.name.toFirstUpper
 		val basePackageName = project.root
@@ -99,7 +168,7 @@ class Heyang2019 {
 			import «commonPackageName».common.vo.Response;
 			import «commonPackageName».common.vo.TableResult;
 			import org.springframework.data.jpa.domain.Specification;
-			public interface «klassType»Service {
+			public interface «klassType»CrudService{
 				public List<«klassType»> findAll(Specification<«klassType»> spec);
 				public TableResult<List<«klassType»>> findAll(Integer pageNo,Integer pageSize, Map<String, String> queryMap);
 				public DataResponse<«klassType»> save(«klassType» «klassType.toFirstLower»);
@@ -112,7 +181,7 @@ class Heyang2019 {
 	}
 
 	// serviceImpl
-	def static ServiceImpl(Project project, Record record, List<Field> fields) {
+	def static CrudServiceImpl(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
 		var daoType = record.name.toFirstUpper + "Repository"
@@ -142,7 +211,7 @@ class Heyang2019 {
 					import «commonPackageName».common.vo.TableResult;
 					
 					@Service
-					public class «klassType»ServiceImpl implements «klassType»Service{
+					public class «klassType»CrudServiceImpl implements «klassType»CrudService{
 					
 						@Autowired
 						private «klassType»Repository «klassType.toFirstLower»Repository;
