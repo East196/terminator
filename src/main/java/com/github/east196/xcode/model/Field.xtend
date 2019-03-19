@@ -21,6 +21,14 @@ class Field {
 	String required
 	String keyType
 	String show
+		
+	def getShowIn(){
+		show
+	}
+	def getOrderIndex(){
+		sortIndex
+	}
+
 
 	String projectId // 项目ID
 	String recordId // 纪录ID
