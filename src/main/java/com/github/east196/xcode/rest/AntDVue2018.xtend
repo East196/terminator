@@ -285,6 +285,9 @@ export default {
 		  «IF f.required=="required"»
 		  { required: true, message: '请输入«f.label»!' }
 		  «ENDIF»
+		  
+		  
+		  
 		  ]}"
 		>
 			<a-input/>

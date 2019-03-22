@@ -42,6 +42,8 @@ class Field {
 	String formGroup
 	String formItem
 	String formItemData
+	
+	String valid
 
 	def String javaName() {
 		return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name.toLowerCase())

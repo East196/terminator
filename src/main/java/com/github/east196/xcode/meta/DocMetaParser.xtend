@@ -60,6 +60,10 @@ class DocMetaParser implements MetaParser {
 				field.keyType = fieldRow.getCell(5).text.trim
 				field.sortIndex = fieldRow.getCell(6).text.trim
 				field.show = fieldRow.getCell(7).text.trim
+				field.valid = fieldRow.getCell(8).text.trim
+				if(field.valid.length==0){
+					field.valid="{}";
+				}
 				println(field)
 				fields.add(field)
 			}
