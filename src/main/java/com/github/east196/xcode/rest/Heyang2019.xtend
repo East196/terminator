@@ -8,16 +8,44 @@ import com.github.east196.xcode.model.Three
 import com.github.east196.xcode.model.GeneResult
 import com.github.east196.xcode.meta.DocMetaParser
 import com.google.common.base.CaseFormat
+import lombok.Data
+import org.boon.Boon
+
+@Data
+class Valid {
+	boolean r=false
+	String v
+
+	def static from(String validStr) {
+		Boon.fromJson(validStr, Valid)
+	}
+
+	def getRequried() {
+		r
+	}
+	def getValid() {
+		v
+	}
+}
 
 class Heyang2019 {
 
 	def static void main(String[] args) {
-		new DocMetaParser().action('''D:\hyyy\统一数据文档 Test.doc''').filter [ three |
-			three.record.geneOk.trim == ""
+		//print(toValid('''{"r":true,"v":address}''').requried)
+		new DocMetaParser().action('''D:\hyyy\杂件\统一数据文档 Test.doc''').filter [ three |
+		three.record.geneOk.trim == ""
 		].forEach [ three |
-			println(111)
+		println(111)
 			geneAll(three)
 		]
+	}
+	
+	def static toValid(String validStr){
+		Valid.from(validStr)
+	}
+	
+	def static toJson(Valid valid){
+		Boon.toPrettyJson(valid)
 	}
 
 	def static geneAll(Three three) {
@@ -89,7 +117,7 @@ class Heyang2019 {
 				content = CrudServiceImpl(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»CrudServiceImpl.java'''
 			}
-			case "coustomcontroller":{
+			case "coustomcontroller": {
 				content = CoustomCon1troller(project, record, fields)
 				path = '''«project.path»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper»CoustomController.java'''
 			}
@@ -100,58 +128,58 @@ class Heyang2019 {
 		}
 		return new GeneResult(content, path)
 	}
-	
+
 	def static CoustomCon1troller(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var packageName = record.name.toFirstLower
 		var klassType = record.name.toFirstUpper
 		var serviceType = record.name.toFirstUpper + "Service"
 		'''
-		package «basePackageName».«packageName»;
-		
-		import org.slf4j.Logger;
-		import org.slf4j.LoggerFactory;
-		import io.swagger.annotations.Api;
-		import org.springframework.web.bind.annotation.RestController;
-		import org.springframework.beans.factory.annotation.Autowired;
-		
-		@Api("自定义«record.label»管理接口")
-		@RestController
-		public class «klassType»CoustomController {
+			package «basePackageName».«packageName»;
 			
-				private static final Logger LOGGER = LoggerFactory.getLogger(«klassType»Controller.class);
+			import org.slf4j.Logger;
+			import org.slf4j.LoggerFactory;
+			import io.swagger.annotations.Api;
+			import org.springframework.web.bind.annotation.RestController;
+			import org.springframework.beans.factory.annotation.Autowired;
 			
-				@Autowired
-				private «serviceType» «serviceType.toFirstLower»;
-			
-		}
+			@Api("自定义«record.label»管理接口")
+			@RestController
+			public class «klassType»CoustomController {
+				
+					private static final Logger LOGGER = LoggerFactory.getLogger(«klassType»Controller.class);
+				
+					@Autowired
+					private «serviceType» «serviceType.toFirstLower»;
+				
+			}
 		 '''
 	}
-	
+
 	def static ServiceImpl(Project project, Record record, List<Field> fields) {
 		var klassType = record.name.toFirstUpper
 		val basePackageName = project.root
 		''' 
-		package «basePackageName».«klassType.toFirstLower»;
-		
-		import org.springframework.stereotype.Service;
-		
-		@Service
-		public class «klassType»ServiceImpl extends «klassType»CrudServiceImpl implements «klassType»Service {
+			package «basePackageName».«klassType.toFirstLower»;
 			
-		}
+			import org.springframework.stereotype.Service;
+			
+			@Service
+			public class «klassType»ServiceImpl extends «klassType»CrudServiceImpl implements «klassType»Service {
+				
+			}
 		'''
 	}
-	
+
 	def static Service(Project project, Record record, List<Field> fields) {
 		var klassType = record.name.toFirstUpper
 		val basePackageName = project.root
 		''' 
-		package «basePackageName».«klassType.toFirstLower»;
-		
-		public interface «klassType»Service extends «klassType»CrudService{
+			package «basePackageName».«klassType.toFirstLower»;
 			
-		}
+			public interface «klassType»Service extends «klassType»CrudService{
+				
+			}
 		'''
 	}
 
@@ -305,7 +333,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.EntityListeners;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 
+import com.yjupi.common.Validators;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NotFound;
@@ -340,48 +371,61 @@ import lombok.ToString;
 @EntityListeners(AuditingEntityListener.class)
 public class «klassType» {
 
-	«FOR f : fields»
+«FOR f : fields»
+
 	/**«f.doc»**/
 	«IF f.getKeyType=="P"»
 	@Id
 	@GenericGenerator(name="system-uuid", strategy="uuid") //这个是hibernate的注解/生成32位UUID
 	@GeneratedValue(generator="system-uuid")
 	@Column(length = 32)
-	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="M21"»
-	@NotNull(message = "«f.doc»不能为空！")
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»s"})
 	@ManyToOne(fetch=FetchType.EAGER,optional=false)
 	@NotFound(action= NotFoundAction.IGNORE)
-	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="12M"»
 	@Transient
 	@JsonIgnoreProperties(ignoreUnknown = true, value = {"«beanName»"})
 	@OneToMany(fetch=FetchType.LAZY,mappedBy="«beanName»",orphanRemoval=false)
 	@NotFound(action= NotFoundAction.IGNORE)
-	private List<«f.javaType»> «f.name.toFirstLower»;
 	«ELSEIF f.getKeyType=="121"»
 	@OneToOne(fetch=FetchType.EAGER)
 	@NotFound(action= NotFoundAction.IGNORE)
-	private «f.javaType» «f.name.toFirstLower»;
-	«ELSEIF f.type=="date"»
+	«ENDIF»
+	«IF f.type=="date"»
     @DateTimeFormat(pattern = "yyyy-MM-dd")
     @JsonFormat(pattern="yyyy-MM-dd",timezone = "GMT+8")
     «IF f.name.contains("createTime")»@CreatedDate«ENDIF»
     «IF f.name.contains("modifyTime")»@LastModifiedDate«ENDIF»
-	private «f.javaType» «f.name.toFirstLower»;
 	«ELSEIF f.type=="datetime"»
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern="yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
     «IF f.name.contains("createTime")»@CreatedDate«ENDIF»
     «IF f.name.contains("modifyTime")»@LastModifiedDate«ENDIF»
-	private «f.javaType» «f.name.toFirstLower»;
-	«ELSE»
-	private «f.javaType» «f.name.toFirstLower»;
 	«ENDIF»
-	
+	«IF f.valid.toValid.requried==true»
+	«IF f.javaType=="List"»
+	@NotEmpty(message ="«f.doc»列表不能为空")
+	«ENDIF»
+	@NotNull(message ="«f.doc»不能为空")
+	«ENDIF»
+	«IF f.valid.toValid.valid=="cname"»
+	@Pattern(regexp = Validators.REGEX_CHINESE_LENGTH ,message = "姓名应当使用汉字！并且长度应当在2至8个汉字之间！")
+	«ELSEIF f.valid.toValid.valid=="ename"»
+	@Pattern(regexp = Validators.REGEX_USERNAME_PLUS ,message = "用户名应当使用英文数字！并且长度应当在4至10个汉字之间！")
+	«ELSEIF f.valid.toValid.valid=="name"»
+	@Pattern(regexp = Validators.REGEX_CHINESE_OR_ENGLISH_OR_NUMBER ,message = "名称应当使用汉字英文数字！并且长度应当在2至40个汉字之间！")
+	«ELSEIF f.valid.toValid.valid=="address"»
+	@Pattern(regexp = Validators.REGEX_CHINESE_OR_ENGLISH_OR_NUMBER ,message = "地址应当使用中文、英文、数字！并且长度应当在2至40个汉字之间！")
+	«ELSEIF f.valid.toValid.valid=="phone"»
+	@Pattern(regexp = Validators.REGEX_MOBILE ,message = "手机号码格式不对！")
+	«ELSEIF f.valid.toValid.valid=="password"»
+	@Pattern(regexp = Validators.REGEX_ENGLISH_OR_NUMBER_LENGTH ,message = "密码应当为英文、数字，并且长度在6-12位之间！")
+	«ELSEIF f.valid.toValid.valid=="path"»
+	@Pattern(regexp = Validators.REGEX_PATH ,message = "路径应该格式正确！！")
+	«ENDIF»
+	private «f.javaType» «f.name.toFirstLower»;
 	«ENDFOR»
-
 }
 		'''
 	}
@@ -446,7 +490,7 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 	
 	«FOR f : fields»
 	«IF f.getKeyType=="U"»
-	public «beanType» findBy«f.name.toFirstUpper»(«f.javaType» «f.name»);
+	public «beanType» findBy«f.name.toFirstUpper»AndEnableIsTrue(«f.javaType» «f.name»);
 	«ENDIF»
 	«ENDFOR»
 	
@@ -658,6 +702,5 @@ public interface «klassType» {
 }
 		'''
 	} // TODO PUT 方法合并对象 
-
 
 }
