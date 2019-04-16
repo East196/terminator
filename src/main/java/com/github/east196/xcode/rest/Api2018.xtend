@@ -1,18 +1,17 @@
 package com.github.east196.xcode.rest
 
 import com.github.east196.xcode.bot.Bots
-
 import com.github.east196.xcode.model.Field
+import com.github.east196.xcode.model.GeneResult
 import com.github.east196.xcode.model.Project
 import com.github.east196.xcode.model.Record
 import com.github.east196.xcode.model.Three
 import java.util.List
 import org.apache.poi.hwpf.usermodel.Table
 import org.eclipse.xtend.lib.annotations.Data
-import com.github.east196.xcode.model.GeneResult
 
 class Api2018 {
-	var static src = '''E:\backup\xcode\统一接口文档20181228.doc'''
+	var static src = '''E:\backup\xcode\API_NEW.doc'''
 
 	def static table2data(Three projectThree, Table table) {
 		var Project project = projectThree.project
@@ -76,25 +75,28 @@ class Api2018 {
 		]
 
 		val httpReqResps = resttables.map [ table |
+			println(table.getRow(0).getCell(1).text)
 			val rest = table2rest(projectThree.project, table)
 			rest
 		].toList
 
 		httpReqResps.forEach [ rest |
 			var Three project = rest.project
+			
 			var Three headers = rest.headers
-			headers.project=project.project
+			geneEntity(headers, project)
+			
+			
 			var Three params = rest.params
-			params.project=project.project
+			geneEntity(params, project)
+			
 			var Three reqBody = rest.reqBody
-			reqBody.project=project.project
+			geneEntity(reqBody, project)
+			
 			var Three respBody = rest.respBody
 			respBody.project=project.project
-			
-			threeGene(headers).copy
-			threeGene(params).copy
-			threeGene(reqBody).copy
 			threeGene(respBody).copy
+
 		]
 
 		val controllerName = projectThree.project.name.toFirstUpper + "Controller"
@@ -118,6 +120,13 @@ class Api2018 {
 			httpReqResps)
 		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Controller.java'''
 		new GeneResult(content, path).copy
+	}
+	
+	protected def static void geneEntity(Three part, Three project) {
+		if(part.fields.length>0){
+			part.project=project.project
+			threeGene(part).copy
+		}
 	}
 
 	protected def static CharSequence threeContent(Three three) {
@@ -191,6 +200,10 @@ class Api2018 {
 			var row = resttable.getRow(j)
 			var rowType = row.getCell(0).text.trim
 			if (rowType.equalsIgnoreCase(type) && !row.getCell(1).text.trim.nullOrEmpty) {
+							println(rowType)
+			println(row.getCell(1).text)
+			println(row.getCell(2).text)
+			println(row.getCell(3).text)
 				var field = new Field()
 				field.name = row.getCell(1).text.trim
 				field.type = row.getCell(2).text.trim
@@ -206,14 +219,20 @@ class Api2018 {
 		var klassType = record.name.toFirstUpper
 		var packageName = project.name.toFirstLower
 		val basePackageName = project.root
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
+		
 
 		'''
 			package «basePackageName».«packageName»;
 
 import java.util.List;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 import lombok.Data;
+
+import «commonPackageName».common.Converts;
 
 @Data
 public class «klassType» {
@@ -222,6 +241,22 @@ public class «klassType» {
 	/**«f.doc»**/
 	private «f.javaType» «f.name.toFirstLower»;	
 	«ENDFOR»
+	
+	public Map<String,Object> toMap(){
+		Map<String,Object> map = new HashMap<>();
+		«FOR f : fields»
+		map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
+		«ENDFOR»
+		return map;
+	}
+	
+	public static «klassType» fromMap(Map<String,Object> map){
+		«klassType» «klassType.toFirstLower» = new «klassType»();
+		«FOR f : fields»
+		«klassType.toFirstLower».set«f.name.toFirstUpper»(Converts.to«f.javaType»(map.get("«f.name.toFirstLower»")));
+		«ENDFOR»
+		return «klassType.toFirstLower»;
+	}
 
 }
 		'''
@@ -235,6 +270,7 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -247,16 +283,15 @@ public class «klassType» {
 			
 			import java.util.Map;
 			
-			«FOR http : httpReqResps.filter[it.respBody.fields.size>2]»
-				import «basePackageName».resp.«http.respBody.record.name.toFirstUpper»;
-			«ENDFOR»
+			import «commonPackageName».common.vo.DataResponse;
+
 			
 			public interface «retrofit2Name» {
 				
 			«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
 				@«http.respBody.record.method»("«http.respBody.record.url»")
-				«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»@Query("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
 				«ENDFOR»			
 				«IF http.reqBody.fields.size>0»@Body «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
@@ -265,7 +300,7 @@ public class «klassType» {
 				«IF http.params.fields.size > 0»
 					/** «http.respBody.record.label» */
 					@«http.respBody.record.method»("«http.respBody.record.url»")
-					«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 					«IF http.params.fields.size > 0»@QueryMap Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 					«IF http.reqBody.fields.size>0»@Body «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					);
@@ -283,6 +318,7 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -297,13 +333,15 @@ public class «klassType» {
 			import org.springframework.web.bind.annotation.RequestMethod;
 			import org.springframework.web.bind.annotation.RequestParam;
 			
+			import «commonPackageName».common.vo.DataResponse;
+			
 			@FeignClient(url = "${feign.restcli.request.url}/", name = "«feignName.toFirstLower»")
 			public interface «feignName» {
 				
 			«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
 				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-				«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
 				«ENDFOR»			
 				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
@@ -312,7 +350,7 @@ public class «klassType» {
 				«IF http.params.fields.size > 0»
 					/** «http.respBody.record.label» */
 					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 					«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					);
@@ -330,6 +368,7 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -345,28 +384,30 @@ public class «klassType» {
 				import org.springframework.web.bind.annotation.RequestParam;
 				import org.springframework.web.bind.annotation.RestController;
 				
+				import «commonPackageName».common.vo.DataResponse;
+				
 				@RestController
 				public class «controllerName» {
 					
 				«FOR http : httpReqResps»
 					/** «http.respBody.record.label» */
 					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 					«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
 					«ENDFOR»			
 					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					){
-						return new «http.respBody.record.name.toFirstUpper»();
+						return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
 					}
 					
 					«IF http.params.fields.size > 0»
 						/** «http.respBody.record.label» */
 						@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-						«http.respBody.record.name.toFirstUpper» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+						DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 						«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 						«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 						){
-							return new «http.respBody.record.name.toFirstUpper»();
+							return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
 						}
 					«ENDIF»
 				«ENDFOR»
