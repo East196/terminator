@@ -11,7 +11,7 @@ import org.apache.poi.hwpf.usermodel.Table
 import org.eclipse.xtend.lib.annotations.Data
 
 class Api2018 {
-	var static src = '''E:\backup\xcode\API_NEW.doc'''
+	var static src = '''E:\backup\xcode\API_EM_NEW.doc'''
 
 	def static table2data(Three projectThree, Table table) {
 		var Project project = projectThree.project
@@ -27,6 +27,7 @@ class Api2018 {
 				var field = new Field()
 				field.label = row.getCell(0).text.trim
 				field.name = row.getCell(1).text.trim
+				field.name = field.name.replace(" ","_").split("_").map[item|item.toFirstUpper].join().toFirstLower
 				field.type = row.getCell(2).text.trim
 				field.doc = row.getCell(3).text.trim
 				fields.add(field)
@@ -200,12 +201,9 @@ class Api2018 {
 			var row = resttable.getRow(j)
 			var rowType = row.getCell(0).text.trim
 			if (rowType.equalsIgnoreCase(type) && !row.getCell(1).text.trim.nullOrEmpty) {
-							println(rowType)
-			println(row.getCell(1).text)
-			println(row.getCell(2).text)
-			println(row.getCell(3).text)
 				var field = new Field()
 				field.name = row.getCell(1).text.trim
+				field.name = field.name.replace(" ","_").split("_").map[item|item.toFirstUpper].join().toFirstLower
 				field.type = row.getCell(2).text.trim
 				field.label = row.getCell(3).text.trim
 				field.doc = row.getCell(3).text.trim
@@ -233,6 +231,7 @@ import java.util.Map;
 import lombok.Data;
 
 import «commonPackageName».common.Converts;
+import «commonPackageName».common.vo.*;
 
 @Data
 public class «klassType» {
@@ -282,8 +281,10 @@ public class «klassType» {
 			import retrofit2.http.Body;
 			
 			import java.util.Map;
+			import java.util.Date;
+			import java.util.List;
 			
-			import «commonPackageName».common.vo.DataResponse;
+			import «commonPackageName».common.vo.*;
 
 			
 			public interface «retrofit2Name» {
@@ -292,15 +293,15 @@ public class «klassType» {
 				/** «http.respBody.record.label» */
 				@«http.respBody.record.method»("«http.respBody.record.url»")
 				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-				«FOR f : http.params.fields SEPARATOR ","»@Query("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
-				«ENDFOR»			
+				«FOR f : http.params.fields SEPARATOR ","»@Query("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
+				«ENDFOR»«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»			
 				«IF http.reqBody.fields.size>0»@Body «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 				);
 				
 				«IF http.params.fields.size > 0»
 					/** «http.respBody.record.label» */
 					@«http.respBody.record.method»("«http.respBody.record.url»")
-					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					«IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 					«IF http.params.fields.size > 0»@QueryMap Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 					«IF http.reqBody.fields.size>0»@Body «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					);
@@ -323,6 +324,7 @@ public class «klassType» {
 		'''
 			package «basePackageName».«packageName»;
 			
+			import java.util.Date;
 			import java.util.List;
 			import java.util.Map;
 			
@@ -333,7 +335,7 @@ public class «klassType» {
 			import org.springframework.web.bind.annotation.RequestMethod;
 			import org.springframework.web.bind.annotation.RequestParam;
 			
-			import «commonPackageName».common.vo.DataResponse;
+			import «commonPackageName».common.vo.*;
 			
 			@FeignClient(url = "${feign.restcli.request.url}/", name = "«feignName.toFirstLower»")
 			public interface «feignName» {
@@ -342,15 +344,15 @@ public class «klassType» {
 				/** «http.respBody.record.label» */
 				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
 				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
-				«ENDFOR»			
+				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
+				«ENDFOR»«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»		
 				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 				);
 				
 				«IF http.params.fields.size > 0»
 					/** «http.respBody.record.label» */
 					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					«IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 					«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					);
@@ -373,45 +375,45 @@ public class «klassType» {
 		'''
 			package «basePackageName».«packageName»;
 			
+			import java.util.Date;
+			import java.util.List;
+			import java.util.Map;
+			
+			import org.springframework.web.bind.annotation.PathVariable;
+			import org.springframework.web.bind.annotation.RequestBody;
+			import org.springframework.web.bind.annotation.RequestMapping;
+			import org.springframework.web.bind.annotation.RequestMethod;
+			import org.springframework.web.bind.annotation.RequestParam;
+			import org.springframework.web.bind.annotation.RestController;
+			
+			import «commonPackageName».common.vo.*;
+			
+			@RestController
+			public class «controllerName» {
 				
-				import java.util.List;
-				import java.util.Map;
+			«FOR http : httpReqResps»
+				/** «http.respBody.record.label» */
+				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
+				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
+				«ENDFOR»«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
+				){
+					return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
+				}
 				
-				import org.springframework.web.bind.annotation.PathVariable;
-				import org.springframework.web.bind.annotation.RequestBody;
-				import org.springframework.web.bind.annotation.RequestMapping;
-				import org.springframework.web.bind.annotation.RequestMethod;
-				import org.springframework.web.bind.annotation.RequestParam;
-				import org.springframework.web.bind.annotation.RestController;
-				
-				import «commonPackageName».common.vo.DataResponse;
-				
-				@RestController
-				public class «controllerName» {
-					
-				«FOR http : httpReqResps»
+				«IF http.params.fields.size > 0»
 					/** «http.respBody.record.label» */
 					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-					«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.type.toFirstUpper» «f.javaName»
-					«ENDFOR»			
+					«IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+					«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
 					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 					){
-						return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
+						return new «IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF»();
 					}
-					
-					«IF http.params.fields.size > 0»
-						/** «http.respBody.record.label» */
-						@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-						DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-						«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
-						«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
-						){
-							return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
-						}
-					«ENDIF»
-				«ENDFOR»
-				}
+				«ENDIF»
+			«ENDFOR»
+			}
 		'''
 	}
 

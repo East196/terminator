@@ -53,16 +53,16 @@ class Field {
 		switch (type.toFirstLower) {
 			case "bool": "Boolean"
 			case "boolean": "Boolean"
-			case "varchar": "String"
 			case "datetime": "Date"
 			case "date": "Date"
 			case "int": "Integer"
 			case "bigint": "long"
 			case "long": "Long"
 			case "double": "Double"
+			case "list" : name.subSequence(0,name.length-1).toString.toFirstUpper
 			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper
 			case "object" : name.toFirstUpper
-			default: type.toFirstUpper
+			default: "String"
 		}
 	}
 
