@@ -82,6 +82,11 @@ class Api2018 {
 			httpReqResps)
 		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Android.java'''
 		new GeneResult(content, path).copy
+
+		content = axoisapi(projectThree,
+			httpReqResps)
+		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Api.js'''
+		new GeneResult(content, path).copy
 	}
 
 	protected def static void geneEntity(Three part, Three project) {
@@ -181,12 +186,14 @@ class Api2018 {
 		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
 
 		'''
-					package «basePackageName».«packageName»;
+			package «basePackageName».«packageName»;
 			
 			import java.util.List;
 			import java.util.Date;
 			import java.util.HashMap;
 			import java.util.Map;
+			import java.util.ArrayList;
+			import com.yjupi.firewall.NetWork.NameValuePair;
 			
 			import lombok.Data;
 			
@@ -207,6 +214,15 @@ class Api2018 {
 					map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
 				«ENDFOR»
 				return map;
+			}
+			
+			public List<NameValuePair> toNameValuePairs(){
+				List<NameValuePair> nameValuePairs = new ArrayList<>();
+				«FOR f : fields»
+					NameValuePair «f.name.toFirstLower»pair = new NameValuePair("«f.name.toFirstLower»",«f.name.toFirstLower».toString());	
+					nameValuePairs.add(«f.name.toFirstLower»pair);
+				«ENDFOR»
+				return nameValuePairs;
 			}
 			
 			public static «klassType» fromMap(Map<String,Object> map){
@@ -398,6 +414,7 @@ class Api2018 {
 			import com.yjupi.firewall.NetWork.HttpCaller;
 			import com.yjupi.firewall.NetWork.OkHttpCallback;
 			import com.yjupi.firewall.NetWork.Url;
+			import com.yjupi.firewall.NetWork.NameValuePair;
 			import com.yjupi.firewall.Utils.Utils;
 			import com.yjupi.firewall.Entity.MessageEvent;
 			import com.yjupi.firewall.Entity.ResponseObj;
@@ -415,35 +432,68 @@ class Api2018 {
 			public class «HttpsName» {
 				
 			«FOR http : httpReqResps»	
-				public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS = «httpReqResps.indexOf(http)*2+1»;
-				public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL = «httpReqResps.indexOf(http)*2+2»;
+			public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS = «httpReqResps.indexOf(http)*2+1»;
+			public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL = «httpReqResps.indexOf(http)*2+2»;
 			«ENDFOR»
 			
 				
 			«FOR http : httpReqResps»
-				public void «http.respBody.record.method.toLowerCase.toFirstUpper»«http.respBody.record.name.replace("RespBody","").toFirstUpper»() {
-				    Type type = new TypeToken<«http.respBody.record.name.toFirstUpper»>() {}.getType();
-				    Type mType=Utils.type(ResponseObj.class, type);
-				    HttpCaller.getInstance().«http.respBody.record.method.toLowerCase.toFirstUpper»(Url.getBaseUrl() + "«http.respBody.record.url»", mType, new OkHttpCallback() {
-				        @Override
-				        public void onFailure(int code) {
-				            MessageEvent messageEvent=new MessageEvent(null);
-				            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS);
-				            messageEvent.setName(TagName);
-				            EventBus.getDefault().post(messageEvent);
-				        }
-				        @Override
-				        public void onResponse(int code, Object obj) {
-				            MessageEvent messageEvent = new  MessageEvent(obj);
-				            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL);
-				            messageEvent.setName(TagName);
-				            EventBus.getDefault().post(messageEvent);
-				            //  }
-				        }
-				    });
-				}
+			/** «http.respBody.record.label» */
+			public void «http.respBody.record.method.toLowerCase.toFirstUpper»«http.respBody.record.name.replace("RespBody","").toFirstUpper»(List<NameValuePair> nameValuePairs) {
+			    Type type = new TypeToken<«http.respBody.record.name.toFirstUpper»>() {}.getType();
+			    Type mType=Utils.type(ResponseObj.class, type);
+			    HttpCaller.getInstance().«http.respBody.record.method.toLowerCase.toFirstUpper»(Url.getBaseUrl() + "«http.respBody.record.url»", mType,nameValuePairs,new OkHttpCallback() {
+			        @Override
+			        public void onFailure(int code) {
+			            MessageEvent messageEvent=new MessageEvent(null);
+			            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS);
+			            messageEvent.setName(TagName);
+			            EventBus.getDefault().post(messageEvent);
+			        }
+			        @Override
+			        public void onResponse(int code, Object obj) {
+			            MessageEvent messageEvent = new  MessageEvent(obj);
+			            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL);
+			            messageEvent.setName(TagName);
+			            EventBus.getDefault().post(messageEvent);
+			            //  }
+			        }
+			    });
+			}
 			«ENDFOR»
 			}
+		'''
+	}
+	
+	
+	def static axoisapi(Three projectThree, List<HttpReqResp> httpReqResps) {
+		val HttpsName = projectThree.project.name.toFirstUpper + "Axois"
+		val basePath = projectThree.project.path
+		val javaPath = projectThree.project.root.split("\\.").join("\\")
+		var packageName = projectThree.project.name.toFirstLower
+		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
+
+		'''
+import { getAction,deleteAction,putAction,postAction} from '@/api/manage'
+
+//根路径
+const doMian = "/aiot/";
+//图片预览请求地址
+const imgView = "http://127.0.0.1:8080/aiot/sys/common/view/";
+
+«FOR http : httpReqResps»	
+// «http.respBody.record.label» 
+const «http.respBody.record.name.replace("RespBody","").toFirstLower» = (params)=>«http.respBody.record.method.toLowerCase»Action("«http.respBody.record.url»",params);
+«ENDFOR»
+
+
+export {
+«FOR http : httpReqResps»	
+«http.respBody.record.name.replace("RespBody","").toFirstLower»,
+«ENDFOR»
+}
 		'''
 	}
 
