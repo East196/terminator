@@ -13,6 +13,7 @@ import com.github.east196.xcode.bot.Bots
 import org.boon.Boon
 import com.github.east196.xcode.rest.Mysql2018
 import com.github.east196.xcode.rest.AntDVue2018
+import com.github.east196.xcode.rest.Api2018
 
 class Application {
 
@@ -35,6 +36,10 @@ class Application {
 		option.setRequired(false)
 		options.addOption(option)
 
+		option = new Option("a", "android", false, "生成Android端代码文件")
+		option.setRequired(false)
+		options.addOption(option)
+
 		option = new Option("h", "help", false, "查看帮助")
 		options.addOption(option)
 		//
@@ -49,21 +54,29 @@ class Application {
 		if (commandLine.hasOption(Character.valueOf('d').charValue)) {
 			// 获取参数
 			var String file = commandLine.getOptionValue(Character.valueOf('d').charValue)
-			var List<Three> threes = new DocMetaParser().action(file)
-			System.out.println(Boon.toPrettyJson(threes))
+
 			if (commandLine.hasOption(Character.valueOf('j').charValue)) {
+				var List<Three> threes = new DocMetaParser().action(file)
+				System.out.println(Boon.toPrettyJson(threes))
 				var String json = commandLine.getOptionValue(Character.valueOf('j').charValue)
 				Bots.copy(Boon.toPrettyJson(threes), json)
 			}
 			if (commandLine.hasOption(Character.valueOf('b').charValue)) {
+				var List<Three> threes = new DocMetaParser().action(file)
+				System.out.println(Boon.toPrettyJson(threes))
 				new DocMetaParser().action(file).filter[three|three.record.geneOk.trim == ""].forEach [ three |
 					Mysql2018.geneAll(three)
 				]
 			}
 			if (commandLine.hasOption(Character.valueOf('f').charValue)) {
+				var List<Three> threes = new DocMetaParser().action(file)
+				System.out.println(Boon.toPrettyJson(threes))
 				new DocMetaParser().action(file).filter[three|three.record.geneOk.trim == ""].forEach [ three |
 					AntDVue2018.geneAll(three)
 				]
+			}
+			if (commandLine.hasOption(Character.valueOf('a').charValue)) {
+				Api2018.gene(file)
 			}
 		}
 	}

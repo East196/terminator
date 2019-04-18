@@ -11,56 +11,13 @@ import org.apache.poi.hwpf.usermodel.Table
 import org.eclipse.xtend.lib.annotations.Data
 
 class Api2018 {
-	var static src = '''E:\backup\xcode\API_EM_NEW.doc'''
-
-	def static table2data(Three projectThree, Table table) {
-		var Project project = projectThree.project
-		var recordRow = table.getRow(0)
-		var Record record = new Record
-		record.name = recordRow.getCell(1).text.trim
-		record.label = recordRow.getCell(3).text.trim
-
-		var List<Field> fields = newArrayList()
-		for (var j = 2; j < table.numRows; j++) {
-			var row = table.getRow(j)
-			if (!row.getCell(1).text.trim.nullOrEmpty) {
-				var field = new Field()
-				field.label = row.getCell(0).text.trim
-				field.name = row.getCell(1).text.trim
-				field.name = field.name.replace(" ","_").split("_").map[item|item.toFirstUpper].join().toFirstLower
-				field.type = row.getCell(2).text.trim
-				field.doc = row.getCell(3).text.trim
-				fields.add(field)
-			}
-
-		}
-		new Three(project, record, fields)
-	}
-
-	def static table2project(Table projectTable) {
-		val projectRow = projectTable.getRow(3)
-		var project = new Project
-		project.version = projectRow.getCell(0).text.trim
-		project.name = projectRow.getCell(1).text.trim
-		project.label = projectRow.getCell(2).text.trim
-		project.path = projectRow.getCell(3).text.trim
-		project.root = projectRow.getCell(4).text.trim
-		project.port = projectRow.getCell(5).text.trim
-
-		val webRow = projectTable.getRow(4)
-		project.webPath = webRow.getCell(3).text.trim
-		project.webRoot = webRow.getCell(4).text.trim
-
-		val androidRow = projectTable.getRow(5)
-		project.androidPath = webRow.getCell(3).text.trim
-		project.androidRoot = webRow.getCell(4).text.trim
-		println(project)
-
-		new Three(project, null, null)
-	}
 
 	def static void main(String[] args) {
+		var src = '''E:\backup\xcode\API_ADMIN_NEW.doc'''
+		gene(src)
+	}
 
+	public def static void gene(String src) {
 		val tables = Bots.tables(src)
 		println("--表格总数：" + tables.size())
 
@@ -83,19 +40,18 @@ class Api2018 {
 
 		httpReqResps.forEach [ rest |
 			var Three project = rest.project
-			
+
 			var Three headers = rest.headers
 			geneEntity(headers, project)
-			
-			
+
 			var Three params = rest.params
 			geneEntity(params, project)
-			
+
 			var Three reqBody = rest.reqBody
 			geneEntity(reqBody, project)
-			
+
 			var Three respBody = rest.respBody
-			respBody.project=project.project
+			respBody.project = project.project
 			threeGene(respBody).copy
 
 		]
@@ -121,11 +77,16 @@ class Api2018 {
 			httpReqResps)
 		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Controller.java'''
 		new GeneResult(content, path).copy
+
+		content = android(projectThree,
+			httpReqResps)
+		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Android.java'''
+		new GeneResult(content, path).copy
 	}
-	
+
 	protected def static void geneEntity(Three part, Three project) {
-		if(part.fields.length>0){
-			part.project=project.project
+		if (part.fields.length > 0) {
+			part.project = project.project
 			threeGene(part).copy
 		}
 	}
@@ -142,7 +103,7 @@ class Api2018 {
 	}
 
 	protected def static CharSequence threePath(Three three) {
-		
+
 		val basePath = three.project.path
 		val javaPath = three.project.root.split("\\.").join("\\")
 		var packageName = three.project.name.toFirstLower
@@ -203,7 +164,7 @@ class Api2018 {
 			if (rowType.equalsIgnoreCase(type) && !row.getCell(1).text.trim.nullOrEmpty) {
 				var field = new Field()
 				field.name = row.getCell(1).text.trim
-				field.name = field.name.replace(" ","_").split("_").map[item|item.toFirstUpper].join().toFirstLower
+				field.name = field.name.replace(" ", "_").split("_").map[item|item.toFirstUpper].join().toFirstLower
 				field.type = row.getCell(2).text.trim
 				field.label = row.getCell(3).text.trim
 				field.doc = row.getCell(3).text.trim
@@ -218,47 +179,46 @@ class Api2018 {
 		var packageName = project.name.toFirstLower
 		val basePackageName = project.root
 		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
-		
 
 		'''
-			package «basePackageName».«packageName»;
-
-import java.util.List;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import lombok.Data;
-
-import «commonPackageName».common.Converts;
-import «commonPackageName».common.vo.*;
-
-@Data
-public class «klassType» {
-
-	«FOR f : fields»
-	/**«f.doc»**/
-	private «f.javaType» «f.name.toFirstLower»;	
-	«ENDFOR»
-	
-	public Map<String,Object> toMap(){
-		Map<String,Object> map = new HashMap<>();
-		«FOR f : fields»
-		map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
-		«ENDFOR»
-		return map;
-	}
-	
-	public static «klassType» fromMap(Map<String,Object> map){
-		«klassType» «klassType.toFirstLower» = new «klassType»();
-		«FOR f : fields»
-		«klassType.toFirstLower».set«f.name.toFirstUpper»(Converts.to«f.javaType»(map.get("«f.name.toFirstLower»")));
-		«ENDFOR»
-		return «klassType.toFirstLower»;
-	}
-
-}
-		'''
+					package «basePackageName».«packageName»;
+			
+			import java.util.List;
+			import java.util.Date;
+			import java.util.HashMap;
+			import java.util.Map;
+			
+			import lombok.Data;
+			
+			import «commonPackageName».common.Converts;
+			import «commonPackageName».common.vo.*;
+			
+			@Data
+			public class «klassType» {
+			
+			«FOR f : fields»
+				/**«f.doc»**/
+				private «f.javaType» «f.name.toFirstLower»;	
+			«ENDFOR»
+			
+			public Map<String,Object> toMap(){
+				Map<String,Object> map = new HashMap<>();
+				«FOR f : fields»
+					map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
+				«ENDFOR»
+				return map;
+			}
+			
+			public static «klassType» fromMap(Map<String,Object> map){
+				«klassType» «klassType.toFirstLower» = new «klassType»();
+				«FOR f : fields»
+					«klassType.toFirstLower».set«f.name.toFirstUpper»(Converts.to«f.javaType»(map.get("«f.name.toFirstLower»")));
+				«ENDFOR»
+				return «klassType.toFirstLower»;
+			}
+			
+			}
+			'''
 	}
 
 	def static retrofit2(Three projectThree, List<HttpReqResp> httpReqResps) {
@@ -269,7 +229,8 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
-		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -285,7 +246,7 @@ public class «klassType» {
 			import java.util.List;
 			
 			import «commonPackageName».common.vo.*;
-
+			
 			
 			public interface «retrofit2Name» {
 				
@@ -319,7 +280,8 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
-		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -370,7 +332,8 @@ public class «klassType» {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 		val basePackageName = projectThree.project.root
-		val commonPackageName = projectThree.project.root.split("\\.").subList(0, projectThree.project.root.split("\\.").length - 1).join(".")
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
 			package «basePackageName».«packageName»;
@@ -417,6 +380,73 @@ public class «klassType» {
 		'''
 	}
 
+	def static android(Three projectThree, List<HttpReqResp> httpReqResps) {
+		val HttpsName = projectThree.project.name.toFirstUpper + "Android"
+		val basePath = projectThree.project.path
+		val javaPath = projectThree.project.root.split("\\.").join("\\")
+		var packageName = projectThree.project.name.toFirstLower
+		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
+
+		'''
+			package «basePackageName».«packageName»;
+			
+			import com.google.gson.Gson;
+			import com.google.gson.reflect.TypeToken;
+			
+			import com.yjupi.firewall.NetWork.HttpCaller;
+			import com.yjupi.firewall.NetWork.OkHttpCallback;
+			import com.yjupi.firewall.NetWork.Url;
+			import com.yjupi.firewall.Utils.Utils;
+			import com.yjupi.firewall.Entity.MessageEvent;
+			import com.yjupi.firewall.Entity.ResponseObj;
+			
+			import org.greenrobot.eventbus.EventBus;
+			import org.greenrobot.eventbus.Subscribe;
+			import org.greenrobot.eventbus.ThreadMode;
+			
+			import java.io.IOException;
+			import java.io.InputStream;
+			import java.lang.reflect.Type;
+			import java.util.ArrayList;
+			import java.util.List;
+			
+			public class «HttpsName» {
+				
+			«FOR http : httpReqResps»	
+				public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS = «httpReqResps.indexOf(http)*2+1»;
+				public static final int «http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL = «httpReqResps.indexOf(http)*2+2»;
+			«ENDFOR»
+			
+				
+			«FOR http : httpReqResps»
+				public void «http.respBody.record.method.toLowerCase.toFirstUpper»«http.respBody.record.name.replace("RespBody","").toFirstUpper»() {
+				    Type type = new TypeToken<«http.respBody.record.name.toFirstUpper»>() {}.getType();
+				    Type mType=Utils.type(ResponseObj.class, type);
+				    HttpCaller.getInstance().«http.respBody.record.method.toLowerCase.toFirstUpper»(Url.getBaseUrl() + "«http.respBody.record.url»", mType, new OkHttpCallback() {
+				        @Override
+				        public void onFailure(int code) {
+				            MessageEvent messageEvent=new MessageEvent(null);
+				            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_SUCCESS);
+				            messageEvent.setName(TagName);
+				            EventBus.getDefault().post(messageEvent);
+				        }
+				        @Override
+				        public void onResponse(int code, Object obj) {
+				            MessageEvent messageEvent = new  MessageEvent(obj);
+				            messageEvent.setId(«http.respBody.record.name.replace("RespBody","").toFirstUpper»_FAIL);
+				            messageEvent.setName(TagName);
+				            EventBus.getDefault().post(messageEvent);
+				            //  }
+				        }
+				    });
+				}
+			«ENDFOR»
+			}
+		'''
+	}
+
 	@Data
 	static class HttpReqResp {
 		Three project
@@ -426,4 +456,49 @@ public class «klassType» {
 		Three respBody
 	}
 
+	def static table2data(Three projectThree, Table table) {
+		var Project project = projectThree.project
+		var recordRow = table.getRow(0)
+		var Record record = new Record
+		record.name = recordRow.getCell(1).text.trim
+		record.label = recordRow.getCell(3).text.trim
+
+		var List<Field> fields = newArrayList()
+		for (var j = 2; j < table.numRows; j++) {
+			var row = table.getRow(j)
+			if (!row.getCell(1).text.trim.nullOrEmpty) {
+				var field = new Field()
+				field.label = row.getCell(0).text.trim
+				field.name = row.getCell(1).text.trim
+				field.name = field.name.replace(" ", "_").split("_").map[item|item.toFirstUpper].join().toFirstLower
+				field.type = row.getCell(2).text.trim
+				field.doc = row.getCell(3).text.trim
+				fields.add(field)
+			}
+
+		}
+		new Three(project, record, fields)
+	}
+
+	def static table2project(Table projectTable) {
+		val projectRow = projectTable.getRow(3)
+		var project = new Project
+		project.version = projectRow.getCell(0).text.trim
+		project.name = projectRow.getCell(1).text.trim
+		project.label = projectRow.getCell(2).text.trim
+		project.path = projectRow.getCell(3).text.trim
+		project.root = projectRow.getCell(4).text.trim
+		project.port = projectRow.getCell(5).text.trim
+
+		val webRow = projectTable.getRow(4)
+		project.webPath = webRow.getCell(3).text.trim
+		project.webRoot = webRow.getCell(4).text.trim
+
+		val androidRow = projectTable.getRow(5)
+		project.androidPath = webRow.getCell(3).text.trim
+		project.androidRoot = webRow.getCell(4).text.trim
+		println(project)
+
+		new Three(project, null, null)
+	}
 }
