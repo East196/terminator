@@ -40,6 +40,10 @@ class Application {
 		option.setRequired(false)
 		options.addOption(option)
 
+		option = new Option("x", "android", false, "解析优化AndroidXml并生成findViewById代码")
+		option.setRequired(false)
+		options.addOption(option)
+
 		option = new Option("h", "help", false, "查看帮助")
 		options.addOption(option)
 		//
@@ -77,6 +81,9 @@ class Application {
 			}
 			if (commandLine.hasOption(Character.valueOf('a').charValue)) {
 				Api2018.gene(file)
+			}
+			if (commandLine.hasOption(Character.valueOf('x').charValue)) {
+				AndroidXmlHandler.handleXml(file)
 			}
 		}
 	}
