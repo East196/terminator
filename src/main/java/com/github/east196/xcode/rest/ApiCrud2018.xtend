@@ -325,6 +325,9 @@ class ApiCrud2018 {
 			var klassType = record.name.toFirstUpper
 			var packageName = record.name.toFirstLower
 			var beanName = record.name.toFirstLower
+			val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
+			join(
+				".")
 			'''
 package «basePackageName».entity;
 
@@ -361,6 +364,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import «basePackageName».entity.*;
+import «commonPackageName».Validators;
 
 import lombok.Data;
 import lombok.ToString;

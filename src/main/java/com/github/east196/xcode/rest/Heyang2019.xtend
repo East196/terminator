@@ -316,6 +316,9 @@ class Heyang2019 {
 		var klassType = record.name.toFirstUpper
 		var packageName = record.name.toFirstLower
 		var beanName = record.name.toFirstLower
+		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
+			join(
+				".")
 		'''
 package «basePackageName».«packageName»;
 
@@ -336,7 +339,6 @@ import javax.persistence.EntityListeners;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
-import com.yjupi.common.Validators;
 import org.hibernate.annotations.GenericGenerator;
 import org.hibernate.annotations.ManyToAny;
 import org.hibernate.annotations.NotFound;
@@ -361,6 +363,7 @@ import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
 import «basePackageName».«f.javaType.toFirstLower».«f.javaType»;
 «ENDIF»
 «ENDFOR»
+import «commonPackageName».Validators;
 import lombok.Data;
 import lombok.ToString;
 
