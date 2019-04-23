@@ -82,49 +82,14 @@ class Bots {
 		val fields = info.split('/').get(1).split('\t')
 		print('''
 import com.google.common.base.Objects;
+import lombok.Data;
 
-public class «klass.toFirstUpper» {
+@Data
+public class «klassType» {
 
 	«FOR f : fields»
 	private String «f»;
 	«ENDFOR»
-
-	public «klassType»() {
-	}
-	
-	public «klassType»(«fields.map["String "+it].join(", ")»){
-		«FOR f : fields»
-		this.«f»=«f»;
-		«ENDFOR»
-	}
-
-	«FOR f : fields»
-	public String get«f.toFirstUpper»() {
-		return «f»;
-	}
-
-	public void set«f.toFirstUpper»(String «f») {
-		this.«f» = «f»;
-	}
-	«ENDFOR»
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        «klassType» that = («klassType») o;
-        return «FOR f : fields SEPARATOR '&&' AFTER ';'»Objects.equal(«f», that.«f»)«ENDFOR»
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hashCode(«fields.map[it].join(", ")»);
-    }
-
-    @Override
-    public String toString() {
-        return Objects.toStringHelper(this)«FOR f : fields».add("«f»", «f»)«ENDFOR».toString();
-    }
 }		
 		''')
 	}

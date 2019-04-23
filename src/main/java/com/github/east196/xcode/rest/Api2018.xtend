@@ -22,7 +22,7 @@ class Api2018 {
 		println("--表格总数：" + tables.size())
 
 		val projecttable = tables.filter[it.getRow(0).getCell(0).text.trim.equalsIgnoreCase("project")].get(0)
-		val datatables = tables.filter[it.getRow(0).getCell(0).text.trim.equalsIgnoreCase("data")]
+		val datatables = tables.filter[it.getRow(0).getCell(0).text.trim.equalsIgnoreCase("vo")]
 		val resttables = tables.filter[it.getRow(0).getCell(0).text.trim.equalsIgnoreCase("rest")]
 
 		val projectThree = table2project(projecttable)
@@ -51,9 +51,7 @@ class Api2018 {
 			geneEntity(reqBody, project)
 
 			var Three respBody = rest.respBody
-			respBody.project = project.project
-			threeGene(respBody).copy
-
+			geneEntity(respBody, project)
 		]
 
 		val controllerName = projectThree.project.name.toFirstUpper + "Controller"
@@ -63,19 +61,19 @@ class Api2018 {
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
 
-		var content = retrofit2(projectThree,
+		var content = controller(projectThree,
 			httpReqResps)
-		var path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Retrofit2Client.java'''
+		var path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Controller.java'''
 		new GeneResult(content, path).copy
+//
+//		content = retrofit2(projectThree,
+//			httpReqResps)
+//		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Retrofit2Client.java'''
+//		new GeneResult(content, path).copy
 
 		content = feign(projectThree,
 			httpReqResps)
 		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»FeignClient.java'''
-		new GeneResult(content, path).copy
-
-		content = controller(projectThree,
-			httpReqResps)
-		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Controller.java'''
 		new GeneResult(content, path).copy
 
 		content = android(projectThree,
@@ -135,8 +133,10 @@ class Api2018 {
 		var Three headers = threeFrom(table, "Headers")
 		var Three params = threeFrom(table, "Params")
 		var Three reqBody = threeFrom(table, "ReqBody")
+		var Three reqBodyEntity = threeFrom(table, "请求体")
 		var Three respBody = threeFrom(table, "RespBody")
-		new HttpReqResp(project, headers, params, reqBody, respBody)
+		var Three respBodyEntity = threeFrom(table, "响应体")
+		new HttpReqResp(project, headers, params, reqBody,reqBodyEntity, respBody,respBodyEntity)
 	}
 
 	def static Three threeFrom(Project project, Table table) {
@@ -193,45 +193,45 @@ class Api2018 {
 			import java.util.HashMap;
 			import java.util.Map;
 			import java.util.ArrayList;
-			import com.yjupi.firewall.NetWork.NameValuePair;
 			
 			import lombok.Data;
 			
+			import «basePackageName».crud.entity.*;
 			import «commonPackageName».common.Converts;
 			import «commonPackageName».common.vo.*;
 			
 			@Data
 			public class «klassType» {
 			
-			«FOR f : fields»
-				/**«f.doc»**/
+				«FOR f : fields»
+				/** «f.doc» «f.label» **/
 				private «f.javaType» «f.name.toFirstLower»;	
-			«ENDFOR»
-			
-			public Map<String,Object> toMap(){
-				Map<String,Object> map = new HashMap<>();
-				«FOR f : fields»
-					map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
 				«ENDFOR»
-				return map;
-			}
 			
-			public List<NameValuePair> toNameValuePairs(){
-				List<NameValuePair> nameValuePairs = new ArrayList<>();
-				«FOR f : fields»
-					NameValuePair «f.name.toFirstLower»pair = new NameValuePair("«f.name.toFirstLower»",«f.name.toFirstLower».toString());	
-					nameValuePairs.add(«f.name.toFirstLower»pair);
-				«ENDFOR»
-				return nameValuePairs;
-			}
+				public Map<String,Object> toMap(){
+					Map<String,Object> map = new HashMap<>();
+					«FOR f : fields»
+						map.put("«f.name.toFirstLower»",«f.name.toFirstLower»);	
+					«ENDFOR»
+					return map;
+				}
 			
-			public static «klassType» fromMap(Map<String,Object> map){
-				«klassType» «klassType.toFirstLower» = new «klassType»();
-				«FOR f : fields»
-					«klassType.toFirstLower».set«f.name.toFirstUpper»(Converts.to«f.javaType»(map.get("«f.name.toFirstLower»")));
-				«ENDFOR»
-				return «klassType.toFirstLower»;
-			}
+				public List<NameValuePair> toNameValuePairs(){
+					List<NameValuePair> nameValuePairs = new ArrayList<>();
+					«FOR f : fields»
+						NameValuePair «f.name.toFirstLower»pair = new NameValuePair("«f.name.toFirstLower»",«f.name.toFirstLower».toString());	
+						nameValuePairs.add(«f.name.toFirstLower»pair);
+					«ENDFOR»
+					return nameValuePairs;
+				}
+				
+«««				public static «klassType» fromMap(Map<String,Object> map){
+«««					«klassType» «klassType.toFirstLower» = new «klassType»();
+«««					«FOR f : fields»
+«««						«klassType.toFirstLower».set«f.name.toFirstUpper»(Converts.to«f.javaType»(map.get("«f.name.toFirstLower»")));
+«««					«ENDFOR»
+«««					return «klassType.toFirstLower»;
+«««				}
 			
 			}
 			'''
@@ -261,6 +261,7 @@ class Api2018 {
 			import java.util.Date;
 			import java.util.List;
 			
+			import «basePackageName».crud.entity.*;
 			import «commonPackageName».common.vo.*;
 			
 			
@@ -313,29 +314,26 @@ class Api2018 {
 			import org.springframework.web.bind.annotation.RequestMethod;
 			import org.springframework.web.bind.annotation.RequestParam;
 			
+			import «basePackageName».crud.entity.*;
 			import «commonPackageName».common.vo.*;
 			
 			@FeignClient(url = "${feign.restcli.request.url}/", name = "«feignName.toFirstLower»")
 			public interface «feignName» {
 				
-			«FOR http : httpReqResps»
+				«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
 				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
+				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
+				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
-				«ENDFOR»«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»		
+				«ENDFOR»
+				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
 				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0»@RequestBody «http.reqBodyEntity.fields.get(0).type.toFirstUpper» «http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»
 				);
-				
-				«IF http.params.fields.size > 0»
-					/** «http.respBody.record.label» */
-					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					«IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-					«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
-					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
-					);
-				«ENDIF»
-			«ENDFOR»
+				«ENDFOR»
 			}
 		'''
 	}
@@ -365,33 +363,30 @@ class Api2018 {
 			import org.springframework.web.bind.annotation.RequestParam;
 			import org.springframework.web.bind.annotation.RestController;
 			
+			import «basePackageName».crud.entity.*;
 			import «commonPackageName».common.vo.*;
 			
 			@RestController
 			public class «controllerName» {
 				
-			«FOR http : httpReqResps»
+				«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
 				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-				DataResponse<«http.respBody.record.name.toFirstUpper»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
+				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
+				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
-				«ENDFOR»«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«ENDFOR»
+				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
 				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0»@RequestBody «http.reqBodyEntity.fields.get(0).type.toFirstUpper» «http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»
 				){
-					return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
+					«IF http.respBody.fields.size>0»return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
+					«ELSEIF http.respBodyEntity.fields.size>0»return new DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>();
+					«ELSE»return new Response();«ENDIF»
 				}
-				
-				«IF http.params.fields.size > 0»
-					/** «http.respBody.record.label» */
-					@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-					«IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-					«IF http.params.fields.size > 0»Map<String,Object> queryMap«ENDIF»«IF http.params.fields.size > 0 && http.reqBody.fields.size>0»,«ENDIF»
-					«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
-					){
-						return new «IF http.reqBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>«ELSE»Response«ENDIF»();
-					}
-				«ENDIF»
-			«ENDFOR»
+				«ENDFOR»
 			}
 		'''
 	}
@@ -503,7 +498,9 @@ export {
 		Three headers
 		Three params
 		Three reqBody
+		Three reqBodyEntity //2
 		Three respBody
+		Three respBodyEntity //2
 	}
 
 	def static table2data(Three projectThree, Table table) {
@@ -511,17 +508,18 @@ export {
 		var recordRow = table.getRow(0)
 		var Record record = new Record
 		record.name = recordRow.getCell(1).text.trim
-		record.label = recordRow.getCell(3).text.trim
+		record.label = recordRow.getCell(2).text.trim
+		record.doc = recordRow.getCell(3).text.trim
 
 		var List<Field> fields = newArrayList()
 		for (var j = 2; j < table.numRows; j++) {
 			var row = table.getRow(j)
 			if (!row.getCell(1).text.trim.nullOrEmpty) {
 				var field = new Field()
-				field.label = row.getCell(0).text.trim
-				field.name = row.getCell(1).text.trim
+				field.name = row.getCell(0).text.trim
 				field.name = field.name.replace(" ", "_").split("_").map[item|item.toFirstUpper].join().toFirstLower
-				field.type = row.getCell(2).text.trim
+				field.type = row.getCell(1).text.trim
+				field.label = row.getCell(2).text.trim
 				field.doc = row.getCell(3).text.trim
 				fields.add(field)
 			}

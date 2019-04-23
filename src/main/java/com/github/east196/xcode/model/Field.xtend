@@ -51,6 +51,8 @@ class Field {
 
 	def String javaType() {
 		switch (type.toFirstLower) {
+			case "str": "String"
+			case "string": "String"
 			case "bool": "Boolean"
 			case "boolean": "Boolean"
 			case "datetime": "Date"
@@ -62,7 +64,7 @@ class Field {
 			case "list" : name.subSequence(0,name.length-1).toString.toFirstUpper
 			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper
 			case "object" : name.toFirstUpper
-			default: "String"
+			default: type.toFirstUpper
 		}
 	}
 

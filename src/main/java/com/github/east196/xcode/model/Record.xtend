@@ -20,6 +20,12 @@ class Record {
 	String tableName
 	
 	String geneOk
+	
+	// http
 	String method
 	String url
+	String action
+	String dataType // body - data - object|list
+	String dataName
+	
 }
