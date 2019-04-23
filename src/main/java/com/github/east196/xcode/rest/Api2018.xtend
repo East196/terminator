@@ -406,13 +406,13 @@ class Api2018 {
 			import com.google.gson.Gson;
 			import com.google.gson.reflect.TypeToken;
 			
-			import com.yjupi.firewall.NetWork.HttpCaller;
-			import com.yjupi.firewall.NetWork.OkHttpCallback;
-			import com.yjupi.firewall.NetWork.Url;
-			import com.yjupi.firewall.NetWork.NameValuePair;
-			import com.yjupi.firewall.Utils.Utils;
-			import com.yjupi.firewall.Entity.MessageEvent;
-			import com.yjupi.firewall.Entity.ResponseObj;
+			import «basePackageName».NetWork.HttpCaller;
+			import «basePackageName».NetWork.OkHttpCallback;
+			import «basePackageName».NetWork.Url;
+			import «basePackageName».NetWork.NameValuePair;
+			import «basePackageName».Utils.Utils;
+			import «basePackageName».Entity.MessageEvent;
+			import «basePackageName».Entity.ResponseObj;
 			
 			import org.greenrobot.eventbus.EventBus;
 			import org.greenrobot.eventbus.Subscribe;
