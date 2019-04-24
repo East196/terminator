@@ -32,6 +32,7 @@ class ApiCrud2018 {
 
 	def static geneAll(Three three) {
 		gene(three, "entity").copy
+		gene(three, "bean").copy
 		gene(three, "crudservice").copy
 		gene(three, "crudserviceimpl").copy
 		gene(three, "service").copy
@@ -54,6 +55,10 @@ class ApiCrud2018 {
 		var CharSequence content = ""
 		var CharSequence path = ""
 		switch type {
+			case "bean": {
+				content = bean(project, record, fields);
+				path = '''«project.path»\src\main\android\«javaPath»\entity\«record.name.toFirstUpper».java'''
+			}
 			case "entity": {
 				content = entity(project, record, fields);
 				path = '''«project.path»\src\main\java\«javaPath»\entity\«record.name.toFirstUpper».java'''
@@ -317,6 +322,36 @@ class ApiCrud2018 {
 						    }
 						}
 			'''
+		}
+
+		def static bean(Project project, Record record, List<Field> fields) {
+			val basePackageName = project.root
+			var klassType = record.name.toFirstUpper
+			var packageName = record.name.toFirstLower
+			var beanName = record.name.toFirstLower
+			val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 2).
+			join(
+				".")
+			'''
+package «basePackageName».entity;
+
+import java.util.List;
+import java.util.Date;
+
+import «commonPackageName».common.*;
+
+import lombok.Data;
+import lombok.ToString;
+
+@Data
+@ToString(exclude={«FOR f : fields»«IF f.keyType=="M21"|| f.keyType =="121"»"«f.name»",«ENDIF»«ENDFOR»}) 
+public class «klassType» {
+	«FOR f : fields»
+	/**«f.doc»**/
+	private «f.javaType» «f.name.toFirstLower»;
+	«ENDFOR»
+}
+		'''
 		}
 
 		def static entity(Project project, Record record, List<Field> fields) {
