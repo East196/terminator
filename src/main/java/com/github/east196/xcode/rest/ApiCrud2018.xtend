@@ -639,6 +639,10 @@ public class «klassType» {
 	@RequestParam(value = "pageNo", required = false, defaultValue = "1") Integer pageNo,
 	@RequestParam(value = "pageSize", required = false, defaultValue = "20") Integer pageSize,
 	@RequestBody Map<String, String> queryMap) {
+		if (queryMap.containsKey("pageNo") && queryMap.containsKey("pageSize")) {
+			pageNo = Integer.parseInt(queryMap.get("pageNo"));
+			pageSize = Integer.parseInt(queryMap.get("pageSize"));
+		}
 		TableResult<List<«beanType»>> tableResult = «serviceType.toFirstLower».findAll(pageNo, pageSize,queryMap);
 		return new DataResponse<TableResult<List<«beanType»>>>("0", "查询成功!", tableResult);
 	}	
