@@ -65,6 +65,11 @@ class Api2018 {
 			httpReqResps)
 		var path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Controller.java'''
 		new GeneResult(content, path).copy
+
+		content = service(projectThree,
+			httpReqResps)
+		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Service.java'''
+		new GeneResult(content, path).copy
 //
 //		content = retrofit2(projectThree,
 //			httpReqResps)
@@ -83,7 +88,7 @@ class Api2018 {
 
 		content = axoisapi(projectThree,
 			httpReqResps)
-		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Api.js'''
+		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\index.js'''
 		new GeneResult(content, path).copy
 	}
 
@@ -116,7 +121,7 @@ class Api2018 {
 		if (!record.name.endsWith("RespBody") && fields.size == 0) {
 			return ''''''
 		}
-		var path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«record.name.toFirstUpper».java'''
+		var path = '''«basePath»\src\main\java\«javaPath»\«packageName»\vo\«record.name.toFirstUpper».java'''
 		path
 	}
 
@@ -186,7 +191,7 @@ class Api2018 {
 		val commonPackageName = project.root.split("\\.").subList(0, project.root.split("\\.").length - 1).join(".")
 
 		'''
-			package «basePackageName».«packageName»;
+			package «basePackageName».«packageName».vo;
 			
 			import java.util.List;
 			import java.util.Date;
@@ -262,6 +267,7 @@ class Api2018 {
 			import java.util.List;
 			
 			import «basePackageName».crud.entity.*;
+			import «basePackageName».«packageName».vo.*;
 			import «commonPackageName».common.vo.*;
 			
 			
@@ -315,6 +321,7 @@ class Api2018 {
 			import org.springframework.web.bind.annotation.RequestParam;
 			
 			import «basePackageName».crud.entity.*;
+			import «basePackageName».«packageName».vo.*;
 			import «commonPackageName».common.vo.*;
 			
 			@FeignClient(url = "${feign.restcli.request.url}/", name = "«feignName.toFirstLower»")
@@ -340,6 +347,7 @@ class Api2018 {
 
 	def static controller(Three projectThree, List<HttpReqResp> httpReqResps) {
 		val controllerName = projectThree.project.name.toFirstUpper + "Controller"
+		val serviceName = projectThree.project.name.toFirstUpper + "Service"
 		val feignName = projectThree.project.name.toFirstUpper + "FeignClient"
 		val retrofit2Name = projectThree.project.name.toFirstUpper + "Retrofit2Client"
 		val basePath = projectThree.project.path
@@ -356,6 +364,7 @@ class Api2018 {
 			import java.util.List;
 			import java.util.Map;
 			
+			import org.springframework.beans.factory.annotation.Autowired;
 			import org.springframework.web.bind.annotation.PathVariable;
 			import org.springframework.web.bind.annotation.RequestBody;
 			import org.springframework.web.bind.annotation.RequestMapping;
@@ -364,14 +373,19 @@ class Api2018 {
 			import org.springframework.web.bind.annotation.RestController;
 			
 			import «basePackageName».crud.entity.*;
+			import «basePackageName».«packageName».vo.*;
 			import «commonPackageName».common.vo.*;
 			
 			@RestController
 			public class «controllerName» {
 				
+				@Autowired
+				«serviceName» «serviceName.toFirstLower»;
+				
+				
 				«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
-				@RequestMapping(value="«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
+				@RequestMapping(value="/api/v1«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
 				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
 				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
 				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
@@ -382,10 +396,56 @@ class Api2018 {
 				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
 				«IF http.reqBodyEntity.fields.size>0»@RequestBody «http.reqBodyEntity.fields.get(0).type.toFirstUpper» «http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»
 				){
-					«IF http.respBody.fields.size>0»return new DataResponse<«http.respBody.record.name.toFirstUpper»>();
-					«ELSEIF http.respBodyEntity.fields.size>0»return new DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>();
-					«ELSE»return new Response();«ENDIF»
+					return «serviceName.toFirstLower».«http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«FOR f : http.params.fields SEPARATOR ","»«f.javaName»
+				«ENDFOR»
+				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBody.fields.size>0»«http.reqBody.record.name.toFirstLower»«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0»«http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»					
+					);
 				}
+				«ENDFOR»
+			}
+		'''
+	}
+	
+	def static service(Three projectThree, List<HttpReqResp> httpReqResps) {
+		val serviceName = projectThree.project.name.toFirstUpper + "Service"
+		val feignName = projectThree.project.name.toFirstUpper + "FeignClient"
+		val retrofit2Name = projectThree.project.name.toFirstUpper + "Retrofit2Client"
+		val basePath = projectThree.project.path
+		val javaPath = projectThree.project.root.split("\\.").join("\\")
+		var packageName = projectThree.project.name.toFirstLower
+		val basePackageName = projectThree.project.root
+		val commonPackageName = projectThree.project.root.split("\\.").subList(0,
+			projectThree.project.root.split("\\.").length - 1).join(".")
+
+		'''
+			package «basePackageName».«packageName»;
+			
+			import java.util.Date;
+			import java.util.List;
+			import java.util.Map;
+			
+			import «basePackageName».crud.entity.*;
+			import «basePackageName».«packageName».vo.*;
+			import «commonPackageName».common.vo.*;
+			
+			public interface «serviceName» {
+				
+				«FOR http : httpReqResps»
+				/** «http.respBody.record.label» */
+				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
+				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
+				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«FOR f : http.params.fields SEPARATOR ","»«f.javaType.toFirstUpper» «f.javaName»
+				«ENDFOR»
+				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBody.fields.size>0»«http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
+				«IF http.reqBodyEntity.fields.size>0»«http.reqBodyEntity.fields.get(0).type.toFirstUpper» «http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»
+				);
 				«ENDFOR»
 			}
 		'''
@@ -423,6 +483,8 @@ class Api2018 {
 			import java.lang.reflect.Type;
 			import java.util.ArrayList;
 			import java.util.List;
+			
+			import «basePackageName».«packageName».vo.*;
 			
 			public class «HttpsName» {
 				
@@ -462,7 +524,7 @@ class Api2018 {
 	
 	
 	def static axoisapi(Three projectThree, List<HttpReqResp> httpReqResps) {
-		val HttpsName = projectThree.project.name.toFirstUpper + "Axois"
+		val HttpsName = projectThree.project.name.toFirstUpper + "index.js"
 		val basePath = projectThree.project.path
 		val javaPath = projectThree.project.root.split("\\.").join("\\")
 		var packageName = projectThree.project.name.toFirstLower
@@ -471,24 +533,12 @@ class Api2018 {
 			projectThree.project.root.split("\\.").length - 1).join(".")
 
 		'''
-import { getAction,deleteAction,putAction,postAction} from '@/api/manage'
-
-//根路径
-const doMian = "/aiot/";
-//图片预览请求地址
-const imgView = "http://127.0.0.1:8080/aiot/sys/common/view/";
-
-«FOR http : httpReqResps»	
-// «http.respBody.record.label» 
-const «http.respBody.record.name.replace("RespBody","").toFirstLower» = (params)=>«http.respBody.record.method.toLowerCase»Action("«http.respBody.record.url»",params);
-«ENDFOR»
-
-
-export {
-«FOR http : httpReqResps»	
-«http.respBody.record.name.replace("RespBody","").toFirstLower»,
-«ENDFOR»
+const api = {
+	«FOR http : httpReqResps»	
+	«http.respBody.record.name.replace("RespBody","").toFirstUpper»: '/api/v1«http.respBody.record.url»',// «http.respBody.record.label» 
+	«ENDFOR»
 }
+export default api
 		'''
 	}
 

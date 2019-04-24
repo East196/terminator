@@ -18,7 +18,6 @@ class ApiCrud2018 {
 		new DocMetaParser().action('''E:\backup\xcode\统一数据文档 Pro.doc''').filter [ three |
 			three.record.geneOk.trim == ""
 		].forEach [ three |
-			println(111)
 			geneAll(three)
 		]
 	}
@@ -80,7 +79,7 @@ class ApiCrud2018 {
 			case "controller": {
 				content = controller(project, record,
 					fields)
-				path = '''«project.path»\src\main\java\«javaPath»\controller\«record.name.toFirstUpper»Controller.java'''
+				path = '''«project.path»\src\main\java\«javaPath»\controller\«record.name.toFirstUpper»CrudController.java'''
 
 			}
 			case "restcli": {
@@ -363,7 +362,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import «basePackageName».entity.*;
-import «commonPackageName».Validators;
+import «commonPackageName».common.*;
 
 import lombok.Data;
 import lombok.ToString;
@@ -528,7 +527,7 @@ public interface «daoType» extends JpaRepository<«beanType», String>, JpaSpe
 						join(".")
 					var beanType = record.name.toFirstUpper
 					var serviceType = record.name.toFirstUpper + "Service"
-					var klassType = record.name.toFirstUpper + "Controller"
+					var klassType = record.name.toFirstUpper + "CrudController"
 					var packageName = record.name.
 						toFirstLower
 					'''
@@ -575,7 +574,7 @@ import «basePackageName».entity.*;
 
 @Api("«record.label»管理接口")
 @RestController
-@RequestMapping("/controller/v1/«beanType.toFirstLower»")
+@RequestMapping("/crud/v1/«beanType.toFirstLower»")
 public class «klassType» {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(«klassType».class);
