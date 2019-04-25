@@ -75,6 +75,11 @@ class Api2018 {
 			httpReqResps)
 		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\«projectThree.project.name.toFirstUpper»Retrofit2Client.java'''
 		new GeneResult(content, path).copy
+		
+		content = retrofit2remote(projectThree,
+			httpReqResps)
+		path = '''«basePath»\src\main\java\«javaPath»\«packageName»\Retrofit2Remote.java'''
+		new GeneResult(content, path).copy
 
 		content = feign(projectThree,
 			httpReqResps)
@@ -252,6 +257,66 @@ class Api2018 {
 			'''
 	}
 
+	def static retrofit2remote(Three projectThree, List<HttpReqResp> httpReqResps) {
+		var packageName = projectThree.project.name.toFirstLower
+		val basePackageName = projectThree.project.root
+		'''
+package «basePackageName».«packageName»;
+
+import java.io.IOException;
+
+import org.apache.commons.lang3.StringUtils;
+
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+import com.google.gson.GsonBuilder;
+
+public class Retrofit2Remote {
+
+	private static final String BASE_URL = "http://httpbin.org/";
+	private static final String TOKEN_NAME = "X-Access-Token";
+
+	private static String token = null;
+
+	private static String getToken() {
+		return token;
+	}
+
+	public static OkHttpClient okHttpClient;
+	public static Retrofit retrofit;
+
+	static {
+		class TokenHeaderInterceptor implements Interceptor {
+
+			@Override
+			public Response intercept(Chain chain) throws IOException {
+				String token = getToken();
+				if (StringUtils.isEmpty(token)) {
+					Request originalRequest = chain.request();
+					return chain.proceed(originalRequest);
+				} else {
+					Request originalRequest = chain.request();
+					Request updateRequest = originalRequest.newBuilder().header(TOKEN_NAME, token).build();
+					return chain.proceed(updateRequest);
+				}
+			}
+
+		}
+
+		okHttpClient = new OkHttpClient.Builder().addNetworkInterceptor(new TokenHeaderInterceptor()).build();
+		retrofit = new Retrofit.Builder().baseUrl(BASE_URL)
+				.addConverterFactory(GsonConverterFactory.create(new GsonBuilder().setLenient().create()))
+				.client(okHttpClient).build();
+
+	}
+
+}
+		'''
+	}
 	def static retrofit2(Three projectThree, List<HttpReqResp> httpReqResps) {
 		val controllerName = projectThree.project.name.toFirstUpper + "Controller"
 		val feignName = projectThree.project.name.toFirstUpper + "FeignClient"
@@ -272,6 +337,7 @@ class Api2018 {
 			import retrofit2.http.Query;
 			import retrofit2.http.QueryMap;
 			import retrofit2.http.Body;
+			import retrofit2.Call;
 			
 			import java.util.Map;
 			import java.util.Date;
@@ -286,10 +352,10 @@ class Api2018 {
 				
 			«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
-				@«http.respBody.record.method.toUpperCase»("«http.respBody.record.url»")
-				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
+				@«http.respBody.record.method.toUpperCase»("/yjfirewall/api/v1/«http.respBody.record.url»")
+				Call<«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
 				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
-				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
+				«ELSE»Response«ENDIF»> «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»@Query("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
 				«ENDFOR»
 				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»

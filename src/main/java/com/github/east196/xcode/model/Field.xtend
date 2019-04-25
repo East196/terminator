@@ -1,6 +1,5 @@
 package com.github.east196.xcode.model
 
-import com.google.common.base.CaseFormat
 import org.eclipse.xtend.lib.annotations.Accessors
 import org.eclipse.xtend.lib.annotations.EqualsHashCode
 import org.eclipse.xtend.lib.annotations.ToString
@@ -46,7 +45,7 @@ class Field {
 	String valid
 
 	def String javaName() {
-		return CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.LOWER_CAMEL, name.toLowerCase())
+		name.replace(" ", "_").split("_").map[item|item.toFirstUpper].join().toFirstLower
 	}
 
 	def String javaType() {
