@@ -14,6 +14,7 @@ import org.boon.Boon
 import com.github.east196.xcode.rest.Mysql2018
 import com.github.east196.xcode.rest.AntDVue2018
 import com.github.east196.xcode.rest.Api2018
+import com.github.east196.xcode.bot.AndroidXmlHandler
 
 class Application {
 
@@ -40,7 +41,11 @@ class Application {
 		option.setRequired(false)
 		options.addOption(option)
 
-		option = new Option("x", "android", false, "解析优化AndroidXml并生成findViewById代码")
+		option = new Option("x", "androidxml", false, "解析优化AndroidXml并生成findViewById代码")
+		option.setRequired(false)
+		options.addOption(option)
+
+		option = new Option("e", "entity2bean", false, "解析Entity并生成Bean")
 		option.setRequired(false)
 		options.addOption(option)
 
@@ -84,6 +89,9 @@ class Application {
 			}
 			if (commandLine.hasOption(Character.valueOf('x').charValue)) {
 				AndroidXmlHandler.handleXml(file)
+			}
+			if (commandLine.hasOption(Character.valueOf('e').charValue)) {
+				AndroidXmlHandler.entity2beanByDir(file)
 			}
 		}
 	}

@@ -1,5 +1,6 @@
-package com.github.east196.xcode
+package com.github.east196.xcode.bot
 
+import com.google.common.base.Charsets
 import com.google.common.io.Files
 import java.io.File
 import java.io.FileOutputStream
@@ -20,9 +21,29 @@ class AndroidXmlHandler {
 	def static void main(String[] args) {
 		// 根据文件名+xml的节点类型+数字生成id
 		// 根据节点类型+节点ID生成  Type name =  findViewById(R.id.节点id),初始化
-		var path = '''C:\Users\threepangpang\Desktop\person_city_item.xml'''
-		Files.copy(new File(path), new File(path + ".bak"))
-		handleXml(path)
+//		var path = '''C:\Users\threepangpang\Desktop\person_city_item.xml'''
+//		Files.copy(new File(path), new File(path + ".bak"))
+//		handleXml(path)
+
+		var dir = '''C:\Users\threepangpang\Desktop\entity'''
+		entity2beanByDir(dir)
+
+	}
+	
+	def static void entity2beanByDir(String javaDir) {
+		new File(javaDir).listFiles.forEach[
+			entity2bean(it.path)
+		]
+	}
+	
+	def static void entity2bean(String javaFile) {
+		println(javaFile)
+		var lines = Files.readLines(new File(javaFile),Charsets.UTF_8).filter[
+			!(it.contains("@")|| it.contains("spring")||it.contains("javax")||it.contains("hibernate")
+				||it.contains("jackson")||it.contains("jeecg")||it.contains("testDemo")
+			)||it.contains("@Data")
+		].toList.join(System.lineSeparator)
+		Files.write(lines,new File(javaFile),Charsets.UTF_8)
 	}
 
 	def static handleXml(String path) {
