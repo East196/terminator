@@ -503,13 +503,20 @@ public class Retrofit2Remote {
 				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
 				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
 				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
-				«FOR f : http.params.fields SEPARATOR ","»@RequestParam("«f.javaName»")«f.javaType.toFirstUpper» «f.javaName»
+				«FOR f : http.params.fields SEPARATOR ","»
+				@RequestParam(value="«f.javaName»"«IF f.javaName =="pageNo"»,required = false, defaultValue = "1"«ENDIF»«IF f.javaName == "pageSize" »,required = false, defaultValue = "20"«ENDIF»)«f.javaType.toFirstUpper» «f.javaName»
 				«ENDFOR»
 				«IF http.reqBody.fields.size>0 && http.params.fields.size>0»,«ENDIF»
 				«IF http.reqBody.fields.size>0»@RequestBody «http.reqBody.record.name.toFirstUpper» «http.reqBody.record.name.toFirstLower»«ENDIF»
 				«IF http.reqBodyEntity.fields.size>0 && http.params.fields.size>0»,«ENDIF»
 				«IF http.reqBodyEntity.fields.size>0»@RequestBody «http.reqBodyEntity.fields.get(0).type.toFirstUpper» «http.reqBodyEntity.fields.get(0).name.toFirstLower»«ENDIF»
 				){
+					«IF http.params.fields.exists[f|f.javaName =="pageNo"]»
+					if (queryMap.containsKey("pageNo") && queryMap.containsKey("pageSize")) {
+						pageNo = Integer.parseInt(queryMap.get("pageNo"));
+						pageSize = Integer.parseInt(queryMap.get("pageSize"));
+					}
+					«ENDIF»
 					return «serviceName.toFirstLower».«http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»«f.javaName»
 				«ENDFOR»
