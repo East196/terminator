@@ -500,7 +500,7 @@ public class Retrofit2Remote {
 				«FOR http : httpReqResps»
 				/** «http.respBody.record.label» */
 				@RequestMapping(value="/api/v1«http.respBody.record.url»",method=RequestMethod.«http.respBody.record.method.toUpperCase»)
-				«IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
+				public «IF http.respBody.fields.size>0»DataResponse<«http.respBody.record.name.toFirstUpper»>
 				«ELSEIF http.respBodyEntity.fields.size>0»DataResponse<«http.respBodyEntity.fields.get(0).type.toFirstUpper»>
 				«ELSE»Response«ENDIF» «http.respBody.record.name.replace("RespBody","").toFirstLower»(
 				«FOR f : http.params.fields SEPARATOR ","»
