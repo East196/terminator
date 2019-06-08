@@ -20,14 +20,14 @@ class Field {
 	String required
 	String keyType
 	String show
-		
-	def getShowIn(){
+
+	def getShowIn() {
 		show
 	}
-	def getOrderIndex(){
+
+	def getOrderIndex() {
 		sortIndex
 	}
-
 
 	String projectId // 项目ID
 	String recordId // 纪录ID
@@ -41,7 +41,7 @@ class Field {
 	String formGroup
 	String formItem
 	String formItemData
-	
+
 	String valid
 
 	def String javaName() {
@@ -49,21 +49,36 @@ class Field {
 	}
 
 	def String javaType() {
+		if (type.trim.isNullOrEmpty) {
+			return "String"
+		}
 		switch (type.toFirstLower) {
-			case "str": "String"
-			case "string": "String"
-			case "bool": "Boolean"
-			case "boolean": "Boolean"
-			case "datetime": "Date"
-			case "date": "Date"
-			case "int": "Integer"
-			case "bigint": "long"
-			case "long": "Long"
-			case "double": "Double"
-			case "list" : name.subSequence(0,name.length-1).toString.toFirstUpper
-			case "array" : name.subSequence(0,name.length-1).toString.toFirstUpper
-			case "object" : name.toFirstUpper
-			default: type.toFirstUpper
+			case "str":
+				"String"
+			case "string":
+				"String"
+			case "bool":
+				"Boolean"
+			case "boolean":
+				"Boolean"
+			case "datetime":
+				"Date"
+			case "date":
+				"Date"
+			case "int":
+				"Integer"
+			case "bigint":
+				"long"
+			case "long":
+				"Long"
+			case "double":
+				"Double"
+			case "list": '''List<«name.subSequence(0,name.length-1).toString.toFirstUpper»>'''
+			case "array": '''List<«name.subSequence(0,name.length-1).toString.toFirstUpper»>'''
+			case "object":
+				name.toFirstUpper
+			default:
+				type.toFirstUpper
 		}
 	}
 
