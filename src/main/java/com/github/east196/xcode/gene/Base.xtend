@@ -34,8 +34,8 @@ class Base {
 	def static bean(Project project, Record record, List<Field> fields) {
 		val basePackageName = project.root
 		var klassType = record.name.toFirstUpper
-		var packageName = record.name.toFirstLower
-		var beanName = record.name.toFirstLower
+//		var packageName = record.name.toFirstLower
+//		var beanName = record.name.toFirstLower
 		'''
 package «basePackageName»;
 

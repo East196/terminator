@@ -19,3 +19,7 @@
     meta: { title: 'RecordList', icon: 'bank', permission: ['Home'] }
   },
   ```
+  
+  
+安装 sdkman
+安装 lazybones
