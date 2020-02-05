@@ -7,6 +7,8 @@
 __pycache__
 src-gen
 .pydevproject
+.idea/*
+xcode.iml
 
 # Compiled class file
 *.class

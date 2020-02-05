@@ -8,7 +8,6 @@ import org.eclipse.xtend.lib.annotations.ToString
 @EqualsHashCode
 @ToString(singleLine=true)
 class Code {//枚举类型
-
 	///// 原始六大件
 	String id             			//ID
 	String name						//名称
