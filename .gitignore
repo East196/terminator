@@ -1,14 +1,17 @@
 # eclipse files
-/.project
-/.classpath
-/.settings/
-/target/**
-/src/main/xtend-gen/
+**/.project
+**/.classpath
+**/.settings/
+**/target/**
+**/src/main/xtend-gen/
 __pycache__
 src-gen
 .pydevproject
-.idea/*
-xcode.iml
+**/.idea/*
+**/.settings/**
+**.iml
+**._trace
+**.xtendbin
 
 # Compiled class file
 *.class

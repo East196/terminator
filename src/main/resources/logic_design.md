@@ -1,8 +1,0 @@
-
-# logic design
-
-```puml
-
-
-
-```
