@@ -93,6 +93,12 @@ class Application {
 			if (commandLine.hasOption(Character.valueOf('e').charValue)) {
 				AndroidXmlHandler.entity2beanByDir(file)
 			}
+		}else{
+			System.out.println("必须填写-d")
+			// 格式化输出
+			new HelpFormatter().printHelp("java -jar xcode.jar", options, true)
+			return;
+			
 		}
 	}
 }

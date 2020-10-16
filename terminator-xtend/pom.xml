@@ -24,12 +24,13 @@
 	</dependencies>
 
 	<build>
-		<finalName>terminator-xtend</finalName>
+		<finalName>t</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.eclipse.xtend</groupId>
 				<artifactId>xtend-maven-plugin</artifactId>
 				<version>2.10.0</version>
+			
 			</plugin>
 		</plugins>
 	</build>
